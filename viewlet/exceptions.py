@@ -1,0 +1,2 @@
+class ViewletException(Exception):
+    pass
