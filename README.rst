@@ -156,7 +156,7 @@ By default you viewlets will be named as the function. To override this you can 
         return render_to_string('hello_user.html', {'name': name})
 
 
-A powerful usage of ``viewlet.refresh`` is to use it togehter with Django signals:
+A powerful usage of ``viewlet.refresh`` is to use it together with Django signals:
 
 .. code:: python
 
