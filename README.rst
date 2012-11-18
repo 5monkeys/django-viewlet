@@ -125,7 +125,7 @@ To customize this key pass a string to the viewlet decorator argument ``key``
 
 
 Django viewlet will cache context instead of html by using the ``template`` decorator argument.
-This is useful if chached html is too heavy, or your viewlet template needs to be rendered on every call.
+This is useful if cached html is too heavy, or your viewlet template needs to be rendered on every call.
 
 .. code:: python
 
