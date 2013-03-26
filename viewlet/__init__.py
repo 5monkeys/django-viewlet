@@ -1,17 +1,15 @@
 # coding=utf-8
 from .api import *
 
-VERSION = (1, 0, 1)
+VERSION = (1, 0, 1, 'final', 0)
 
 
 def get_version(version=None):
     """Derives a PEP386-compliant version number from VERSION."""
     if version is None:
         version = VERSION
-    if len(version) == 5:
-        assert version[3] in ('alpha', 'beta', 'rc', 'final')
-    else:
-        assert len(version) == 3
+    assert len(version) == 5
+    assert version[3] in ('alpha', 'beta', 'rc', 'final')
 
     # Now build the two parts of the version number:
     # main = X.Y[.Z]
