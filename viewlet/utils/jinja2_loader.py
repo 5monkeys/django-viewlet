@@ -1,8 +1,9 @@
-from jinja2.filters import do_mark_safe
+# coding=utf-8
 from viewlet.library import library
 from viewlet.exceptions import ViewletException
 try:
-    from coffin.template.loader import render_to_string
+    from jinja2.filters import do_mark_safe
+    from coffin.template.loader import render_to_string  # nopep8
 except ImportError:
     raise ViewletException('You need coffin along with jinja2 for django-viewlet to work')
 
