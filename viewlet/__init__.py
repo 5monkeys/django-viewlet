@@ -1,5 +1,5 @@
+# coding=utf-8
 from .api import *
-
 
 VERSION = (1, 0, 0, 'rc', 1)
 

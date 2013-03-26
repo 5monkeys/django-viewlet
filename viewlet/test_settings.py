@@ -25,7 +25,7 @@ INSTALLED_APPS = [
 ]
 
 MEDIA_ROOT = '/tmp/viewlet/media'
-STATIC_ROOT = '/tmp/viewlet/static'  #os.path.join(TEST_DIR, 'static')
+STATIC_ROOT = '/tmp/viewlet/static'
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 
