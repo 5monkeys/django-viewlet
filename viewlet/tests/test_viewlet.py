@@ -1,3 +1,4 @@
+# coding=utf-8
 from time import time, sleep
 from django.core.cache import cache
 from django.contrib.formtools.tests import DummyRequest
@@ -5,9 +6,10 @@ from django.template import Context
 from django.template.loader import get_template_from_string
 from django.test import TestCase
 import viewlet
-from viewlet.exceptions import ViewletException
-from viewlet.utils.jinja2_loader import call_viewlet
-from viewlet.views import viewlet_view
+from ..exceptions import ViewletException
+from ..views import viewlet_view
+
+__all__ = ['ViewletTest']
 
 
 class ViewletTest(TestCase):
@@ -103,5 +105,6 @@ class ViewletTest(TestCase):
         self.assertEqual(response.content, html)
 
     def test_jinja_tag(self):
+        from ..utils.jinja2_loader import call_viewlet
         html = call_viewlet({}, 'hello_nocache', 'world')
         self.assertEqual(html.strip(), 'Hello world!')
