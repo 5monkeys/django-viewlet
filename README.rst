@@ -1,8 +1,11 @@
+# coding=utf-8
 Django Viewlet
 ==============
 
 Render template parts with extended cache control.
 
+.. image:: https://travis-ci.org/5monkeys/django-viewlet.png?branch=master
+    :target: http://travis-ci.org/5monkeys/django-viewlet
 
 Installation
 ------------

@@ -4,7 +4,7 @@ import os
 import sys
 
 
-if __name__ == '__main__':
+def main():
     sys.path.append(os.path.dirname(__file__))
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'viewlet.test_settings')
 
@@ -15,3 +15,7 @@ if __name__ == '__main__':
     failures = test_runner.run_tests(['viewlet'])
 
     sys.exit(failures)
+
+
+if __name__ == '__main__':
+    main()  # used for travis
