@@ -14,4 +14,4 @@ def get_context_object(model, pk, context):
 
 
 def querydict_to_kwargs(querydict):
-    return dict((k.encode('utf-8'), ','.join(v)) for k, v in querydict.iteritems())
+    return dict((k.encode('utf-8'), ','.join(querydict.getlist(k))) for k in querydict.keys())
