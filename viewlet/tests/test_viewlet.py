@@ -2,6 +2,7 @@
 from time import time, sleep
 from django.core.cache import cache
 from django.contrib.formtools.tests import DummyRequest
+from django.http import QueryDict
 from django.template import Context
 from django.template.loader import get_template_from_string
 from django.test import TestCase
@@ -99,7 +100,7 @@ class ViewletTest(TestCase):
 
     def test_view(self):
         request = DummyRequest()
-        request.GET['name'] = ('world',)
+        request.GET = QueryDict('name=world')
         response = viewlet_view(request, 'hello_cache')
         html = viewlet.call('hello_cache', None, 'world')
         self.assertEqual(response.content, html)
