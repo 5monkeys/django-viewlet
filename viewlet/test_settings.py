@@ -1,7 +1,7 @@
-import os
+# coding=utf-8
 import django
 
-TEST_DIR = os.path.abspath(os.path.dirname(__file__))
+DEBUG = TEMPLATE_DEBUG = True
 
 if django.VERSION[:2] >= (1, 3):
     DATABASES = {
@@ -21,18 +21,12 @@ else:
 
 INSTALLED_APPS = [
     'viewlet',
+    'viewlet.tests',
 ]
 
+MEDIA_ROOT = '/tmp/viewlet/media'
+STATIC_ROOT = '/tmp/viewlet/static'  #os.path.join(TEST_DIR, 'static')
+MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
-
-
-STATIC_ROOT = os.path.join(TEST_DIR, 'static')
-
-TEMPLATE_DIRS = (
-    # Specifically choose a name that will not be considered
-    # by app_directories loader, to make sure each test uses
-    # a specific template without considering the others.
-    os.path.join(TEST_DIR, 'templates'),
-)
 
 SECRET_KEY = "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!"

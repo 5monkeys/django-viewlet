@@ -1,3 +1,4 @@
+# coding=utf-8
 import types
 from viewlet.exceptions import ViewletException
 
@@ -61,7 +62,7 @@ class Library(dict):
         Handles both decorator pointer and caller (with or without arguments).
         Creates a Viewlet instance to wrap the decorated function with.
         """
-        from viewlet.model import Viewlet
+        from viewlet.models import Viewlet
 
         if isinstance(name, types.FunctionType):
             def declare(func):
