@@ -1,6 +1,5 @@
 # coding=utf-8
 import types
-from viewlet.exceptions import ViewletException
 
 
 class Singleton(type):
@@ -48,7 +47,8 @@ class Library(dict):
         try:
             return self[name]
         except KeyError:
-            raise ViewletException(u'Unknown viewlet "%s"' % name)
+            from viewlet.exceptions import UnknownViewlet
+            raise UnknownViewlet(u'Unknown viewlet "%s"' % name)
 
     def add(self, viewlet):
         """
