@@ -1,8 +1,8 @@
 from viewlet.conf import settings
 if settings.use_jinja2():
-    from viewlet.utils import jinja2_loader as loader
+    from viewlet.loaders import jinja2_loader as loader
 else:
-    from viewlet.utils import django_loader as loader
+    from viewlet.loaders import django_loader as loader
 
 
 render = loader.render_to_string

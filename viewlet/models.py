@@ -1,12 +1,12 @@
 from inspect import getargspec
+from django.template.context import BaseContext
+from django.utils.encoding import smart_str
+from viewlet.cache import get_cache
 from viewlet.exceptions import ViewletException
-from viewlet.utils import render, mark_safe
-#try:
-from django.core.cache import cache
-from django.template.context import RequestContext, Context
-#except ImportError:
-#    e.g. installing package, etc.
-#    pass
+from viewlet.loaders import render, mark_safe
+
+cache = get_cache()
+MAX_CACHE_TIMEOUT = 2591999
 
 
 class Viewlet(object):
@@ -20,7 +20,12 @@ class Viewlet(object):
         self.template = template
         self.key = key
         self.key_mod = False
-        self.timeout = timeout if cached else 0
+        if not cached:
+            self.timeout = None
+        elif timeout:
+            self.timeout = timeout
+        else:
+            self.timeout = MAX_CACHE_TIMEOUT
 
     def register(self, func):
         """
@@ -43,10 +48,9 @@ class Viewlet(object):
                 raise ViewletException(u'Invalid viewlet cache key for "%s": found %s, expected %s' % (self.name,
                                                                                                        cache_key_argcount,
                                                                                                        func_argcount))
-        elif self.timeout != 0:
+        elif self.timeout is not None:
             self.key = u'viewlet:%s(%s)' % (self.name, ','.join(['%s' for _ in range(0, func_argcount)]))
             self.key_mod = func_argcount > 0
-
         self.library.add(self)
 
         return self.call
@@ -67,8 +71,10 @@ class Viewlet(object):
 
         merged_args = self._build_args(*args, **kwargs)
         dyna_key = self._build_cache_key(*merged_args)
-
-        output = None if refresh or not self.key else cache.get(dyna_key)
+        if refresh or not self.use_cache():
+            output = None
+        else:
+            output = cache.get(dyna_key)
 
         if output is None:
             output = self.viewlet_func(*merged_args)
@@ -76,21 +82,30 @@ class Viewlet(object):
             if self.template:
                 context = merged_args[0]
 
-                if isinstance(context, RequestContext) or isinstance(context, Context):
+                if isinstance(context, BaseContext):
                     context.push()
                 else:
                     context = dict(context)
 
                 context.update(output)
                 output = self.render(context)
-
-                if isinstance(context, RequestContext) or isinstance(context, Context):
+                self._save(dyna_key, context)
+                if isinstance(context, BaseContext):
                     context.pop()
-
-            if self.key:
-                cache.set(dyna_key, output, self.timeout)
+            else:
+                output = smart_str(output)
+                self._save(dyna_key, output)
+        elif self.template:
+            output = self.render(output)
 
         return mark_safe(output)
+
+    def use_cache(self):
+        return self.key and self.timeout is not None
+
+    def _save(self, key, content):
+        if self.use_cache():
+            cache.set(key, content, self.timeout)
 
     def render(self, context):
         """
