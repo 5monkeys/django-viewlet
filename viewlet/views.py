@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.template.context import RequestContext
 import viewlet
-from viewlet.utils import querydict_to_kwargs
+from viewlet.loaders import querydict_to_kwargs
 
 
 def viewlet_view(request, name):
