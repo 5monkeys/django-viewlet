@@ -1,12 +1,13 @@
+import warnings
 from inspect import getargspec
-from viewlet.exceptions import ViewletException
-from viewlet.utils import render, mark_safe
-#try:
-from django.core.cache import cache
-from django.template.context import RequestContext, Context
-#except ImportError:
-#    e.g. installing package, etc.
-#    pass
+from django.template.context import BaseContext
+from django.utils.encoding import smart_str, smart_unicode
+from viewlet.cache import get_cache
+from viewlet.conf import settings
+from viewlet.loaders import render
+
+cache = get_cache()
+DEFAULT_CACHE_TIMEOUT = cache.default_timeout
 
 
 class Viewlet(object):
@@ -14,13 +15,20 @@ class Viewlet(object):
     Representation of a viewlet
     """
 
-    def __init__(self, library, name=None, template=None, key=None, timeout=60, cached=True):
+    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_CACHE_TIMEOUT, cached=True):
         self.library = library
         self.name = name
         self.template = template
         self.key = key
         self.key_mod = False
-        self.timeout = timeout if cached else 0
+        if timeout is None:
+            # Handle infinite caching, due to Django's cache backend not respecting 0
+            self.timeout = settings.VIEWLET_INFINITE_CACHE_TIMEOUT
+        else:
+            self.timeout = timeout
+        if not cached:
+            self.timeout = 0
+            warnings.warn('Keyword argument "cache" is deprecated, use timeout=0 to disable cache', DeprecationWarning)
 
     def register(self, func):
         """
@@ -35,18 +43,10 @@ class Viewlet(object):
             self.name = func.func_name
 
         func_argcount = len(self.viewlet_func_args) - 1
-        if self.key:
-            cache_key_argcount = self.key.count('%s')
-            if cache_key_argcount == func_argcount:
-                self.key_mod = True
-            else:
-                raise ViewletException(u'Invalid viewlet cache key for "%s": found %s, expected %s' % (self.name,
-                                                                                                       cache_key_argcount,
-                                                                                                       func_argcount))
-        elif self.timeout != 0:
+        if self.timeout:
+            #TODO: HASH KEY
             self.key = u'viewlet:%s(%s)' % (self.name, ','.join(['%s' for _ in range(0, func_argcount)]))
             self.key_mod = func_argcount > 0
-
         self.library.add(self)
 
         return self.call
@@ -57,7 +57,21 @@ class Viewlet(object):
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):
-        return self.key if not self.key_mod else self.key % tuple(args[1:])
+        """
+        Build cache key based on viewlet argument except initial context argument.
+        """
+        return self.key if not self.key_mod else self.key % tuple(args)
+
+    def _cache_get(self, key):
+        return cache.get(key)
+
+    def _cache_set(self, key, value):
+        timeout = self.timeout
+
+        # Avoid pickling string like objects
+        if isinstance(value, basestring):
+            value = smart_str(value)
+        cache.set(key, value, timeout)
 
     def call(self, *args, **kwargs):
         """
@@ -66,31 +80,37 @@ class Viewlet(object):
         refresh = kwargs.get('refresh', False)
 
         merged_args = self._build_args(*args, **kwargs)
-        dyna_key = self._build_cache_key(*merged_args)
+        cache_key = self._build_cache_key(*merged_args[1:])
 
-        output = None if refresh or not self.key else cache.get(dyna_key)
+        if refresh or not self.is_using_cache():
+            output = None
+        else:
+            output = self._cache_get(cache_key)
 
+        # First viewlet execution, forced refresh or cache timeout
         if output is None:
             output = self.viewlet_func(*merged_args)
+            if self.is_using_cache():
+                self._cache_set(cache_key, output)
 
-            if self.template:
-                context = merged_args[0]
+        # Render template for context viewlets
+        if self.template:
+            context = merged_args[0]
+            if isinstance(context, BaseContext):
+                context.push()
+            else:
+                context = dict(context)
+            context.update(output)
 
-                if isinstance(context, RequestContext) or isinstance(context, Context):
-                    context.push()
-                else:
-                    context = dict(context)
+            output = self.render(context)
 
-                context.update(output)
-                output = self.render(context)
+            if isinstance(context, BaseContext):
+                context.pop()
 
-                if isinstance(context, RequestContext) or isinstance(context, Context):
-                    context.pop()
+        return smart_unicode(output)
 
-            if self.key:
-                cache.set(dyna_key, output, self.timeout)
-
-        return mark_safe(output)
+    def is_using_cache(self):
+        return self.timeout != 0
 
     def render(self, context):
         """
@@ -110,5 +130,5 @@ class Viewlet(object):
         Clears cached viewlet based on args
         """
         merged_args = self._build_args({}, *args)
-        dyna_key = self._build_cache_key(*merged_args)
+        dyna_key = self._build_cache_key(*merged_args[1:])
         cache.delete(dyna_key)

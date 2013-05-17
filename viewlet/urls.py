@@ -4,5 +4,4 @@ try:
 except ImportError:
     from django.conf.urls.defaults import patterns, url
 
-
 urlpatterns = patterns('viewlet.views', url(r'^(?P<name>.+)/$', 'viewlet_view', name='viewlet'))

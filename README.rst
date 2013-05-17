@@ -11,29 +11,59 @@ Installation
 
 Install django-viewlet in your python environment
 
-.. code:: sh
+.. code-block:: sh
 
     $ pip install django-viewlet
 
+Supports ``Django`` version 1.2 - 1.5 and ``Python`` version 2.6 - 2.7.
+
+
+Configuration
+-------------
+
 Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the template tag
 
-.. code:: python
+.. code-block:: python
 
     INSTALLED_APPS = (
         ...
         'viewlet',
     )
 
+Jinja2
+______
 
-If you're using Jinja2 as your template engine put this in your Django settings
+If you're using ``Jinja2`` as your template engine, put this in your Django settings.
 
-.. code:: python
-
-    JINJA2_GLOBALS = {
-        'viewlet': 'viewlet.call_viewlet'
-    }
+.. code-block:: python
 
     VIEWLET_TEMPLATE_ENGINE = 'jinja2'
+
+
+If you're using ``Coffin`` or ``Jingo``, expose viewlet as a global Jinja2 function,
+and optionally switch to their respective environment.
+
+**Coffin:**
+
+.. code-block:: python
+
+    JINJA2_GLOBALS = {
+        'viewlet': 'viewlet.loaders.jinja2_loader.call_viewlet'
+    }
+
+    VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
+
+**Jingo:**
+
+.. code-block:: python
+
+    JINJA_CONFIG = {
+        'globals': {
+            'viewlet': 'viewlet.loaders.jinja2_loader.call_viewlet'
+        }
+    }
+
+    VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
 
 
 Usage
@@ -43,7 +73,7 @@ A viewlet is almost like a function based django view, taking a template context
 as first argument instead of request.
 Place your viewlets in ``viewlets.py`` or existing ``views.py`` in your django app directory.
 
-.. code:: python
+.. code-block:: python
 
     from django.template.loader import render_to_string
     from viewlet import viewlet
@@ -55,7 +85,7 @@ Place your viewlets in ``viewlets.py`` or existing ``views.py`` in your django a
 
 You can then render the viewlet with the ``viewlet`` template tag:
 
-.. code:: html
+.. code-block:: html
 
     {% load viewlets %}
     <p>{% viewlet hello_user request.user.username %}</p>
@@ -63,7 +93,7 @@ You can then render the viewlet with the ``viewlet`` template tag:
 
 ... and in your Jinja2 templates:
 
-.. code:: html
+.. code-block:: html
 
     <p>{{ viewlet('host_sponsors', host.id) }}</p>
 
@@ -73,7 +103,7 @@ ___________________
 
 A cached viewlet can be re-rendered and updated behind the scenes with ``viewlet.refresh``
 
-.. code:: python
+.. code-block:: python
 
     import viewlet
     viewlet.refresh('hello_user', 'monkey')
@@ -82,9 +112,9 @@ A cached viewlet can be re-rendered and updated behind the scenes with ``viewlet
 The decorator
 _____________
 
-.. code:: python
+.. code-block:: python
 
-    @viewlet(name, template, key, timeout, cached)
+    @viewlet(name, template, key, timeout)
 
 
 * name
@@ -95,17 +125,15 @@ _____________
 * key
     Optional cache key, if not specified a dynamic key will be generated ``viewlet:name(args...)``
 * timeout
-    Cache timeout. Defaults to 60 sec, None = eternal, 0 = uncached.
-* cached
-    Defaults to True, if set to False timeout will be 0 and therefore uncached.
+    Cache timeout. Defaults to configured cache backend default timeout, None = eternal, 0 = uncached.
 
 
 Examples
 ________
 
-The content returned by the viewlet will by default be cached for 60s. Use the ``timeout`` argument to change this.
+The content returned by the viewlet will by default be cached. Use the ``timeout`` argument to change this.
 
-.. code:: python
+.. code-block:: python
 
     @viewlet(timeout=30*60)
     def hello_user(context, name):
@@ -117,19 +145,21 @@ The content returned by the viewlet will by default be cached for 60s. Use the `
 
 
 Django viewlet will by default build a cache key ``viewlet:name(args...)``.
-To customize this key pass a string to the viewlet decorator argument ``key``
+To customize this key pass a string to the viewlet decorator argument ``key`` that includes string mod operators for each
+viewlet argument.
 
-.. code:: python
+.. code-block:: python
 
-    @viewlet(timeout=30*60, key='some_cache_key')
+    @viewlet(timeout=30*60, key='some_cache_key_%s')
     def hello_user(context, name):
         return render_to_string('hello_user.html', {'name': name})
 
 
-Django viewlet will cache context instead of html by using the ``template`` decorator argument.
+Django viewlet will cache returned context instead of html by using the ``template`` decorator argument.
 This is useful if cached html is too heavy, or your viewlet template needs to be rendered on every call.
+The specified template will then be rendered with the viewlet context merged with the parent context, usually a ``RequestContext``.
 
-.. code:: python
+.. code-block:: python
 
     @viewlet(template='hello_user.html', timeout=30*60)
     def hello_user(context, name):
@@ -140,18 +170,18 @@ This is useful if cached html is too heavy, or your viewlet template needs to be
     **Note:** Return context dict for the template, not rendered html/text
 
 
-If there is no need for caching, set the viewlet decorator argument ``cached`` to ``False``
+If there is no need for caching, set the viewlet decorator argument ``timeout`` to 0.
 
-.. code:: python
+.. code-block:: python
 
-    @viewlet(cached=False)
+    @viewlet(timeout=0)
     def hello_user(context, name):
         return render_to_string('hello_user.html', {'name': name})
 
 
-By default you viewlets will be named as the function. To override this you can set the decorator argument ``name``
+By default your viewlets will be named as the function. To override this you can set the decorator argument ``name``
 
-.. code:: python
+.. code-block:: python
 
     @viewlet(name='greeting')
     def hello_user(context, name):
@@ -160,7 +190,7 @@ By default you viewlets will be named as the function. To override this you can 
 
 A powerful usage of ``viewlet.refresh`` is to use it together with Django signals:
 
-.. code:: python
+.. code-block:: python
 
     class Product(Model):
         name = CharField(max_length=255)
@@ -178,7 +208,7 @@ A powerful usage of ``viewlet.refresh`` is to use it together with Django signal
 
 Viewlets can also be accesses with AJAX by adding ``viewlet.urls`` to your Django root urls:
 
-.. code:: python
+.. code-block:: python
 
     urlpatterns = patterns('',
         (r'^viewlet/', include('viewlet.urls')),

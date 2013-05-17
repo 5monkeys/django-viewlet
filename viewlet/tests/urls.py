@@ -4,7 +4,6 @@ try:
 except ImportError:
     from django.conf.urls.defaults import patterns, include
 
-
 urlpatterns = patterns('',
     (r'^viewlet/', include('viewlet.urls')),
 )

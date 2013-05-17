@@ -70,7 +70,7 @@ setup(
     ],
     install_requires=[
     ],
-    tests_require=['Django', 'Coffin', 'Jinja2'],
+    tests_require=['Django', 'Jinja2', 'jingo', 'coffin'],
     test_suite='run_tests.main',
     cmdclass=cmdclasses,
 )
