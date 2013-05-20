@@ -46,9 +46,9 @@ and optionally switch to their respective environment.
 
 .. code-block:: python
 
-    JINJA2_GLOBALS = {
-        'viewlet': 'viewlet.loaders.jinja2_loader.call_viewlet'
-    }
+    JINJA2_EXTENSIONS = (
+        'viewlet.loaders.jinja2_loader.ViewletExtension',
+    )
 
     VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
 
@@ -57,9 +57,10 @@ and optionally switch to their respective environment.
 .. code-block:: python
 
     JINJA_CONFIG = {
-        'globals': {
-            'viewlet': 'viewlet.loaders.jinja2_loader.call_viewlet'
-        }
+        'extensions': (
+            ...
+           'viewlet.loaders.jinja2_loader.ViewletExtension',
+        ),
     }
 
     VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
@@ -94,7 +95,7 @@ You can then render the viewlet with the ``viewlet`` template tag:
 
 .. code-block:: html
 
-    <p>{{ viewlet('host_sponsors', host.id) }}</p>
+    <p>{% viewlet 'host_sponsors', host.id) %}</p>
 
 
 Refreshing viewlets

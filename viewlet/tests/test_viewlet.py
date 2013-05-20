@@ -107,9 +107,9 @@ class ViewletTest(TestCase):
         self.assertEqual(html1, html2)
 
     def test_render_tag(self):
-        template = self.get_django_template("<h1>{% viewlet hello_nocache name='wörld' %}</h1>")
-        html = self.render(template)
-        self.assertEqual(html.strip(), u'<h1>Hello wörld!</h1>')
+        template = self.get_django_template("<h1>{% viewlet hello_nocache name=viewlet_arg %}</h1>")
+        html = self.render(template, {'viewlet_arg': u'wörld'})
+        self.assertEqual(html.strip(), u'<h1>Hello wörld!\n</h1>')
         template = self.get_django_template("<h1>{% viewlet unknown_viewlet %}</h1>")
         self.assertRaises(UnknownViewlet, self.render, template)
         template = self.get_django_template("<h1>{% viewlet hello_world name= %}</h1>")
@@ -157,9 +157,9 @@ class ViewletTest(TestCase):
         self.assertEqual(response.content.decode('utf-8'), html)
 
     def test_jinja_tag(self):
-        template = self.get_jinja_template(u"<h1>{{ viewlet('hello_nocache', 'wörld') }}</h1>")
-        html = template.render()
-        self.assertEqual(html.strip(), u'<h1>Hello wörld!</h1>')
+        template = self.get_jinja_template(u"<h1>{% viewlet 'hello_nocache', viewlet_arg %}</h1>")
+        html = template.render({'extra': u'Räksmörgås', 'viewlet_arg': u'wörld'})
+        self.assertEqual(html.strip(), u'<h1>RäksmörgåsHello wörld!</h1>')
 
     def test_custom_jinja2_environment(self):
         env = get_env()
@@ -205,7 +205,7 @@ class ViewletTest(TestCase):
         html = self.render(template.strip())
         self.assertEqual(html, u'<h1>Hello <strong>wörld!</strong>\n</h1>')
         # Test jinja2
-        template = self.get_jinja_template(u"<h1>{{ viewlet('hello_strong', 'wörld') }}</h1>")
+        template = self.get_jinja_template(u"<h1>{% viewlet 'hello_strong', 'wörld' %}</h1>")
         html = template.render()
         self.assertEqual(html, u'<h1>Hello <strong>wörld!</strong></h1>')
 
