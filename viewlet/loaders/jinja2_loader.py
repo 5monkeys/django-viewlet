@@ -1,33 +1,44 @@
 # coding=utf-8
 from django.conf import settings as django_settings
 from django.utils.importlib import import_module
-from jinja2 import FileSystemLoader, PackageLoader, ChoiceLoader
+from jinja2 import FileSystemLoader, PackageLoader, ChoiceLoader, nodes
 from jinja2.environment import Environment
+from jinja2.ext import Extension
 from jinja2.filters import do_mark_safe
 import viewlet
 from viewlet.conf import settings
 
 
-def call_viewlet(context, name, *args):
-    """
-    Jinja2 shortcut.
-    Put this in globals of the jinja2 enviornment, named 'viewlet':
-        JINJA2_GLOBALS = {
-            'viewlet': 'viewlet.loaders.jinja2_loader.call_viewlet'
-        }
-    Then from the template a viewlet can be rendered with:
-        {{ viewlet('name-of-viewlet', *args) }}
-    """
-    return mark_safe(viewlet.call(name, context, *args))
-call_viewlet.contextfunction = True
+class ViewletExtension(Extension):
+    tags = set(['viewlet'])
+
+    def parse(self, parser):
+        lineno = parser.stream.next().lineno
+
+        viewlet_args = []
+        name = None
+        first = True
+        while parser.stream.current.type != 'block_end':
+            if not first:
+                parser.stream.expect('comma')
+                viewlet_args.append(parser.parse_expression())
+            else:
+                name = parser.parse_expression()
+            first = False
+        context = nodes.ContextReference()
+        return nodes.CallBlock(self.call_method('_call_viewlet', args=[name, context, nodes.List(viewlet_args)]),
+                               [], [], []).set_lineno(lineno)
+
+    def _call_viewlet(self, name, context, viewlet_args, caller=None):
+        context = context.get_all()
+        return mark_safe(viewlet.call(name, context, *viewlet_args))
 
 
 def create_env():
     x = ((FileSystemLoader, django_settings.TEMPLATE_DIRS),
          (PackageLoader, django_settings.INSTALLED_APPS))
     loaders = [loader(p) for loader, places in x for p in places]
-    env = Environment(loader=ChoiceLoader(loaders))
-    env.globals.update(viewlet=call_viewlet)
+    env = Environment(loader=ChoiceLoader(loaders), extensions=[ViewletExtension])
     return env
 
 
