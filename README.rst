@@ -39,7 +39,7 @@ If you're using ``Jinja2`` as your template engine, put this in your Django sett
     VIEWLET_TEMPLATE_ENGINE = 'jinja2'
 
 
-If you're using ``Coffin`` or ``Jingo``, expose viewlet as a global Jinja2 function,
+If you're using ``Coffin`` or ``Jingo``, add the ``ViewletExtension`` to their settings,
 and optionally switch to their respective environment.
 
 **Coffin:**
@@ -47,6 +47,7 @@ and optionally switch to their respective environment.
 .. code-block:: python
 
     JINJA2_EXTENSIONS = (
+        ...
         'viewlet.loaders.jinja2_loader.ViewletExtension',
     )
 
