@@ -10,6 +10,7 @@ import viewlet
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
+from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
 cache = get_cache()
@@ -73,15 +74,18 @@ class ViewletTest(TestCase):
             return {
                 'name': name
             }
+    
+    def tearDown(self):
+        jinja2_loader._env = None
+        settings.VIEWLET_JINJA2_ENVIRONMENT = 'viewlet.loaders.jinja2_loader.create_env'
 
     def get_django_template(self, source):
         return '\n'.join(('{% load viewlets %}',
                           source))
 
     def get_jinja_template(self, source):
-        from ..loaders.jinja2_loader import env
         settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
-        return env.from_string(source)
+        return get_env().from_string(source)
 
     def render(self, source, context=None):
         return get_template_from_string(source).render(Context(context or {})).strip()
@@ -166,6 +170,7 @@ class ViewletTest(TestCase):
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
+        jinja2_loader._env = None
         env = get_env()
         self.assertEqual(env.optimized, False)
         # Jingo does not support django <= 1.2
