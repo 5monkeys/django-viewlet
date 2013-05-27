@@ -74,7 +74,7 @@ class ViewletTest(TestCase):
             return {
                 'name': name
             }
-    
+
     def tearDown(self):
         jinja2_loader._env = None
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'viewlet.loaders.jinja2_loader.create_env'

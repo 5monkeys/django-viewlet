@@ -41,7 +41,9 @@ def create_env():
     env = Environment(loader=ChoiceLoader(loaders), extensions=[ViewletExtension])
     return env
 
+
 _env = None
+
 
 def get_env():
     global _env
