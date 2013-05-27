@@ -41,16 +41,21 @@ def create_env():
     env = Environment(loader=ChoiceLoader(loaders), extensions=[ViewletExtension])
     return env
 
+_env = None
 
 def get_env():
+    global _env
+    if _env:
+        return _env
+
     jinja2_env_module = settings.VIEWLET_JINJA2_ENVIRONMENT
     module, environment = jinja2_env_module.rsplit('.', 1)
     imported_module = import_module(module)
     jinja2_env = getattr(imported_module, environment)
     if callable(jinja2_env):
         jinja2_env = jinja2_env()
+    _env = jinja2_env
     return jinja2_env
-env = get_env()
 
 
 def render_to_string(template_name, context):
@@ -58,7 +63,7 @@ def render_to_string(template_name, context):
 
 
 def get_template(template_name):
-    return env.get_template(template_name)
+    return get_env().get_template(template_name)
 
 
 def mark_safe(value):
