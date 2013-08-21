@@ -239,4 +239,4 @@ class ViewletTest(TestCase):
         template = self.get_jinja_template("{% viewlet 'hello_request', 'nice to see you' %}")
         html = template.render({'request': {'user': 'nicolas cage'}})
         viewlet.refresh('hello_request', 'nice to see you')
-        self.assertNotEqual(template.render({'request':{'user':'castor troy'}}), html)
+        self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
