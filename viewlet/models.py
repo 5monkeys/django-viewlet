@@ -129,9 +129,10 @@ class Viewlet(object):
 
     def refresh(self, *args):
         """
-        Shortcut to call() with the refresh arg set to True to force a cache update.
+        Shortcut to _call() with the refresh arg set to True to force a cache update.
         """
-        return self.call({}, *args, refresh=True)
+        merged_args = self._build_args({}, *args)
+        return self._call(merged_args, refresh=True)
 
     def expire(self, *args):
         """
