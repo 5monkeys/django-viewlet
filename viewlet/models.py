@@ -77,21 +77,9 @@ class Viewlet(object):
         """
         The actual wrapper around the decorated viewlet function.
         """
-        refresh = kwargs.get('refresh', False)
-
+        refresh = kwargs.pop('refresh', False)
         merged_args = self._build_args(*args, **kwargs)
-        cache_key = self._build_cache_key(*merged_args[1:])
-
-        if refresh or not self.is_using_cache():
-            output = None
-        else:
-            output = self._cache_get(cache_key)
-
-        # First viewlet execution, forced refresh or cache timeout
-        if output is None:
-            output = self.viewlet_func(*merged_args)
-            if self.is_using_cache():
-                self._cache_set(cache_key, output)
+        output = self._call(merged_args, refresh)
 
         # Render template for context viewlets
         if self.template:
@@ -108,6 +96,26 @@ class Viewlet(object):
                 context.pop()
 
         return smart_unicode(output)
+
+    def _call(self, merged_args, refresh=False):
+        """
+        Executes the actual call to the viewlet function and handles all the cache logic
+        """
+
+        cache_key = self._build_cache_key(*merged_args[1:])
+
+        if refresh or not self.is_using_cache():
+            output = None
+        else:
+            output = self._cache_get(cache_key)
+
+        # First viewlet execution, forced refresh or cache timeout
+        if output is None:
+            output = self.viewlet_func(*merged_args)
+            if self.is_using_cache():
+                self._cache_set(cache_key, output)
+
+        return output
 
     def is_using_cache(self):
         return self.timeout != 0
