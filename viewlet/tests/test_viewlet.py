@@ -75,6 +75,12 @@ class ViewletTest(TestCase):
                 'name': name
             }
 
+        @viewlet.viewlet(template='hello_request.html', timeout=0)
+        def hello_request(context, greeting):
+            return {
+                'greeting': greeting
+            }
+
     def tearDown(self):
         jinja2_loader._env = None
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'viewlet.loaders.jinja2_loader.create_env'
@@ -149,7 +155,8 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
         html1 = self.render(template)
         sleep(0.01)
-        html2 = viewlet.refresh('hello_cached_timestamp', 'world')
+        viewlet.refresh('hello_cached_timestamp', 'world')
+        html2 = self.render(template)
         self.assertNotEqual(html1, html2)
 
     def test_view(self):
@@ -227,3 +234,9 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_new_name 'wörld' %}</h1>")
         self.render(template)
         self.assertTrue(viewlet.get('hello_new_name') is not None)
+
+    def test_refreshing_context_viewlet_expecting_request_while_rendering_using_jinja2(self):
+        template = self.get_jinja_template("{% viewlet 'hello_request', 'nice to see you' %}")
+        html = template.render({'request': {'user': 'nicolas cage'}})
+        viewlet.refresh('hello_request', 'nice to see you')
+        self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
