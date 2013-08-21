@@ -155,7 +155,8 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
         html1 = self.render(template)
         sleep(0.01)
-        html2 = viewlet.refresh('hello_cached_timestamp', 'world')
+        viewlet.refresh('hello_cached_timestamp', 'world')
+        html2 = self.render(template)
         self.assertNotEqual(html1, html2)
 
     def test_view(self):
