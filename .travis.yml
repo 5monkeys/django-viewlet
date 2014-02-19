@@ -2,11 +2,39 @@ language: python
 
 python:
   - 2.7
+  - 2.7
+  - 3.3
+
+env:
+  matrix:
+    - DJANGO=1.3
+    - DJANGO=1.4
+    - DJANGO=1.5
+    - DJANGO=1.6
+
+matrix:
+  exclude:
+    - python: 3.3
+      env: DJANGO=1.3
+    - python: 3.3
+      env: DJANGO=1.4
+  include:
+    - python: 2.7
+      env: DJANGO=1.6  COVERAGE=true
+  allow_failures:
+    - env: COVERAGE=true
 
 install:
-  - pip install tox flake8
+  - pip install --quiet --use-mirrors "Django>="$DJANGO",<"$DJANGO".99" flake8
   - make install
 
 script:
-  - make flake8
-  - tox
+  - make flake8 test
+
+after_script:
+  - if [ $COVERAGE == "true" ]; then
+    pip install --quiet --use-mirrors python-coveralls
+    make coverage;
+    coverage report;
+    coveralls;
+    fi
