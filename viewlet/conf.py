@@ -1,3 +1,4 @@
+# coding=utf-8
 from django.conf import settings as django_settings
 
 
@@ -8,7 +9,10 @@ class ViewletSettings(dict):
 
         # Override defaults with django settings
         for key, value in conf.iteritems():
-            setattr(self, key, getattr(django_settings, key, value))
+            if django_settings.configured:
+                setattr(self, key, getattr(django_settings, key, value))
+            else:
+                setattr(self, key, value)
 
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
