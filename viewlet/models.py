@@ -49,7 +49,11 @@ class Viewlet(object):
             self.key_mod = func_argcount > 0
         self.library.add(self)
 
-        return self.call
+        def call_with_refresh(*args, **kwargs):
+            return self.call(*args, **kwargs)
+        setattr(call_with_refresh, 'refresh', self.refresh)
+
+        return call_with_refresh
 
     def _build_args(self, *args, **kwargs):
         viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
