@@ -1,3 +1,4 @@
+# coding=utf-8
 from django.conf import settings as django_settings
 
 
@@ -15,6 +16,7 @@ class ViewletSettings(dict):
 
 
 settings = ViewletSettings(**{
+    'VIEWLET_CACHE_BACKEND': 'viewlet',
     'VIEWLET_TEMPLATE_ENGINE': 'django',
     'VIEWLET_INFINITE_CACHE_TIMEOUT': 31104000,  # 60*60*24*30*12, about a year
     'VIEWLET_JINJA2_ENVIRONMENT': 'viewlet.loaders.jinja2_loader.create_env'

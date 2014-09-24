@@ -1,10 +1,10 @@
-from django.core.cache import InvalidCacheBackendError
+# coding=utf-8
+from .conf import settings
 
 
-def get_cache():
+def get_cache(backend=settings.VIEWLET_CACHE_BACKEND):
+    from django.core import cache
     try:
-        from django.core.cache import get_cache
-        cache = get_cache('viewlet')
-    except (InvalidCacheBackendError, ValueError):
-        from django.core.cache import cache
-    return cache
+        return cache.get_cache(backend)
+    except (cache.InvalidCacheBackendError, ValueError):
+        return cache.cache

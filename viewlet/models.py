@@ -1,3 +1,4 @@
+# coding=utf-8
 import warnings
 from inspect import getargspec
 from django.template.context import BaseContext
@@ -6,8 +7,7 @@ from viewlet.cache import get_cache
 from viewlet.conf import settings
 from viewlet.loaders import render
 
-cache = get_cache()
-DEFAULT_CACHE_TIMEOUT = cache.default_timeout
+DEFAULT_CACHE_TIMEOUT = object()
 
 
 class Viewlet(object):
@@ -15,20 +15,25 @@ class Viewlet(object):
     Representation of a viewlet
     """
 
-    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_CACHE_TIMEOUT, cached=True):
+    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_CACHE_TIMEOUT, cached=True,
+                 backend=None):
         self.library = library
         self.name = name
         self.template = template
         self.key = key
         self.key_mod = False
+        self.cache = get_cache(backend=backend or settings.VIEWLET_CACHE_BACKEND)
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
             self.timeout = settings.VIEWLET_INFINITE_CACHE_TIMEOUT
+        elif timeout is DEFAULT_CACHE_TIMEOUT:
+            self.timeout = self.cache.default_timeout
         else:
             self.timeout = timeout
         if not cached:
             self.timeout = 0
-            warnings.warn('Keyword argument "cache" is deprecated, use timeout=0 to disable cache', DeprecationWarning)
+            warnings.warn('Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
+                          DeprecationWarning)
 
     def register(self, func):
         """
@@ -63,7 +68,7 @@ class Viewlet(object):
         return self.key if not self.key_mod else self.key % tuple(args)
 
     def _cache_get(self, key):
-        return cache.get(key)
+        return self.cache.get(key)
 
     def _cache_set(self, key, value):
         timeout = self.timeout
@@ -71,7 +76,7 @@ class Viewlet(object):
         # Avoid pickling string like objects
         if isinstance(value, basestring):
             value = smart_str(value)
-        cache.set(key, value, timeout)
+        self.cache.set(key, value, timeout)
 
     def call(self, *args, **kwargs):
         """
@@ -140,4 +145,4 @@ class Viewlet(object):
         """
         merged_args = self._build_args({}, *args)
         dyna_key = self._build_cache_key(*merged_args[1:])
-        cache.delete(dyna_key)
+        self.cache.delete(dyna_key)
