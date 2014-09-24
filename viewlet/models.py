@@ -49,7 +49,7 @@ class Viewlet(object):
 
         func_argcount = len(self.viewlet_func_args) - 1
         if self.timeout:
-            #TODO: HASH KEY
+            # TODO: HASH KEY
             self.key = u'viewlet:%s(%s)' % (self.name, ','.join(['%s' for _ in range(0, func_argcount)]))
             self.key_mod = func_argcount > 0
         self.library.add(self)
