@@ -21,7 +21,7 @@ class Viewlet(object):
         self.template = template
         self.key = key
         self.key_mod = False
-        self.cache = get_cache(alias=using or settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+        self.cache = get_cache(alias=using)
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
             self.timeout = settings.VIEWLET_INFINITE_CACHE_TIMEOUT
