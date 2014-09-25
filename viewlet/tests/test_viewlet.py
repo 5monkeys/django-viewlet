@@ -1,12 +1,14 @@
 # coding=utf-8
 from time import time, sleep
+import django.conf
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from django import VERSION as django_version
-import viewlet
+from django.test.utils import override_settings
+import viewlet.conf
+import viewlet.models
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
@@ -14,7 +16,7 @@ from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
 cache = get_cache()
-__all__ = ['ViewletTest']
+__all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
 class ViewletTest(TestCase):
@@ -112,8 +114,8 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_world %}</h1>")
         html1 = self.render(template)
         self.assertEqual(html1, u'<h1>Hello wörld!</h1>')
-        html2 = self.render(template)
         sleep(0.01)
+        html2 = self.render(template)
         self.assertEqual(html1, html2)
 
     def test_render_tag(self):
@@ -181,7 +183,7 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, False)
         # Jingo does not support django <= 1.2
-        if django_version[:2] > (1, 2):
+        if django.VERSION[:2] > (1, 2):
             settings.VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
             env = get_env()
             self.assertEqual(env.autoescape, True)
@@ -206,7 +208,6 @@ class ViewletTest(TestCase):
         v = viewlet.get('hello_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        sleep(0.01)
         self.assertTrue(cache.get(cache_key) is not None)
         v.expire('world')
         self.assertTrue(cache.get(cache_key) is None)
@@ -240,3 +241,46 @@ class ViewletTest(TestCase):
         html = template.render({'request': {'user': 'nicolas cage'}})
         viewlet.refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
+
+
+@override_settings(
+    CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+        'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
+        'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
+    },
+    VIEWLET_CACHE_BACKEND='dummy',
+)
+class ViewletCacheBackendTest(TestCase):
+    def setUp(self):
+        self.assertEqual('dummy', django.conf.settings.VIEWLET_CACHE_BACKEND)
+        self.assertEqual('dummy', reload(viewlet.conf).settings.VIEWLET_CACHE_BACKEND)
+        reload(viewlet.models)  # reload models *after* viewlet.conf is reloaded
+
+        @viewlet.viewlet(template='hello_timestamp.html', timeout=10)
+        def hello_cached_timestamp_settings_cache(context, name):
+            return {
+                'name': name,
+                'timestamp': time(),
+            }
+
+        @viewlet.viewlet(template='hello_timestamp.html', using='short')
+        def hello_cached_timestamp_argument_cache(context, name):
+            return {
+                'name': name,
+                'timestamp': time(),
+            }
+
+    def test_cache_backend_from_settings(self):
+        v = viewlet.get('hello_cached_timestamp_settings_cache')
+        v.call({}, 'world')
+        cache_key = v._build_cache_key('world')
+        self.assertTrue(v.cache.get(cache_key) is None)
+
+    def test_cache_backend_from_argument(self):
+        v = viewlet.get('hello_cached_timestamp_argument_cache')
+        v.call({}, 'world')
+        cache_key = v._build_cache_key('world')
+        self.assertTrue(v.cache.get(cache_key) is not None)
+        sleep(0.01)
+        self.assertTrue(v.cache.get(cache_key) is None)

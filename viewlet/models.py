@@ -6,8 +6,7 @@ from django.utils.encoding import smart_str, smart_unicode
 from viewlet.cache import get_cache
 from viewlet.conf import settings
 from viewlet.loaders import render
-
-DEFAULT_CACHE_TIMEOUT = object()
+from .const import DEFAULT_TIMEOUT
 
 
 class Viewlet(object):
@@ -15,7 +14,7 @@ class Viewlet(object):
     Representation of a viewlet
     """
 
-    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_CACHE_TIMEOUT, cached=True,
+    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, cached=True,
                  using=None):
         self.library = library
         self.name = name
@@ -26,7 +25,7 @@ class Viewlet(object):
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
             self.timeout = settings.VIEWLET_INFINITE_CACHE_TIMEOUT
-        elif timeout is DEFAULT_CACHE_TIMEOUT:
+        elif timeout is DEFAULT_TIMEOUT:
             self.timeout = self.cache.default_timeout
         else:
             self.timeout = timeout
