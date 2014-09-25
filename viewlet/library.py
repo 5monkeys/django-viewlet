@@ -41,7 +41,7 @@ class Library(dict):
         Getter for a registered viewlet.
         If not found then scan for decorated viewlets.
         """
-        if not name in self.keys():
+        if name not in self.keys():
             self.autodiscover()
 
         try:
@@ -54,7 +54,7 @@ class Library(dict):
         """
         Adds a registered viewlet to the Library dict
         """
-        if not viewlet.name in self.keys():
+        if viewlet.name not in self.keys():
             self[viewlet.name] = viewlet
 
     def _decorator(self, name=None, template=None, key=None, timeout=60, cached=True):
