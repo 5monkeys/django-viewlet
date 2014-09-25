@@ -1,6 +1,7 @@
 # coding=utf-8
+from __future__ import unicode_literals
+import six
 from time import time, sleep
-import sys
 import django
 from django.core.urlresolvers import reverse
 from django.template import Context
@@ -19,11 +20,6 @@ if django.VERSION >= (1, 7):
 
 cache = get_cache()
 __all__ = ['ViewletTest']
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 
 class ViewletTest(TestCase):
@@ -182,7 +178,7 @@ class ViewletTest(TestCase):
         self.assertEqual(html.strip(), u'<h1>RäksmörgåsHello wörld!</h1>')
 
     def test_custom_jinja2_environment(self):
-        if sys.version_info > (3, 0):  # TODO: coffin fails for Python 3.x
+        if six.PY3:  # TODO: coffin fails for Python 3.x
             return
         env = get_env()
         self.assertEqual(env.optimized, True)
@@ -235,11 +231,11 @@ class ViewletTest(TestCase):
     def test_cached_string(self):
         template = self.get_django_template("<h1>{% viewlet hello_name name='wörld' %}</h1>")
         html = self.render(template)
-        self.assertTrue(isinstance(html, unicode))
+        self.assertTrue(isinstance(html, six.text_type))
         v = viewlet.get('hello_name')
         cache_key = v._build_cache_key(u'wörld')
         cached_value = cache.get(cache_key)
-        self.assertTrue(isinstance(cached_value, bytes))
+        self.assertTrue(isinstance(cached_value, six.binary_type))
 
     def test_named(self):
         template = self.get_django_template("<h1>{% viewlet hello_new_name 'wörld' %}</h1>")

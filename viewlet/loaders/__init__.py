@@ -1,5 +1,6 @@
 # coding=utf-8
-import sys
+from __future__ import unicode_literals
+import six
 from viewlet.conf import settings
 
 
@@ -22,8 +23,8 @@ def mark_safe(value):
 
 
 def querydict_to_kwargs(querydict):
-    if sys.version_info > (3, 0):
+    if six.PY3:
         make_key = lambda k: k
     else:
         make_key = lambda k: k.encode('utf-8')
-    return dict((make_key(k), ','.join(querydict.getlist(k))) for k in querydict.keys())
+    return dict((make_key(k), ','.join(querydict.getlist(k))) for k in querydict)

@@ -68,6 +68,7 @@ setup(
     dependency_links=[
     ],
     install_requires=[
+        'six',
     ],
     tests_require=['Django', 'Jinja2', 'jingo', 'coffin'],
     test_suite='run_tests.main',

@@ -1,5 +1,8 @@
+# coding=utf-8
+from __future__ import unicode_literals
 import logging
 import re
+import six
 from django import template
 from django.template import TemplateSyntaxError
 import viewlet
@@ -21,7 +24,7 @@ class ViewletNode(template.Node):
     def render(self, context):
         try:
             args = [arg.resolve(context) for arg in self.viewlet_args]
-            kwargs = dict((key, value.resolve(context)) for key, value in self.viewlet_kwargs.items())
+            kwargs = dict((key, value.resolve(context)) for key, value in six.iteritems(self.viewlet_kwargs))
             template = viewlet.call(self.viewlet_name, context, *args, **kwargs)
             return mark_safe(template)
         except UnknownViewlet as e:

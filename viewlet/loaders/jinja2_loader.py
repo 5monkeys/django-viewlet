@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import unicode_literals
 from django.conf import settings as django_settings
 from django.utils.importlib import import_module
 from jinja2 import FileSystemLoader, PackageLoader, ChoiceLoader, nodes
@@ -26,8 +27,9 @@ class ViewletExtension(Extension):
                 name = parser.parse_expression()
             first = False
         context = nodes.ContextReference()
-        return nodes.CallBlock(self.call_method('_call_viewlet', args=[name, context, nodes.List(viewlet_args)]),
-                               [], [], []).set_lineno(lineno)
+        return nodes.CallBlock(
+            self.call_method('_call_viewlet', args=[name, context, nodes.List(viewlet_args)]),
+            [], [], []).set_lineno(lineno)
 
     def _call_viewlet(self, name, context, viewlet_args, caller=None):
         context = context.get_all()

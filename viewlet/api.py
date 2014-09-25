@@ -1,3 +1,5 @@
+# coding=utf-8
+from __future__ import unicode_literals
 from viewlet.library import library
 
 __all__ = ['viewlet', 'get', 'call', 'refresh']

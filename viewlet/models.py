@@ -1,4 +1,6 @@
 # coding=utf-8
+from __future__ import unicode_literals
+import six
 import warnings
 from inspect import getargspec
 from django.template.context import BaseContext
@@ -13,11 +15,6 @@ from viewlet.loaders import render
 
 cache = get_cache()
 DEFAULT_CACHE_TIMEOUT = cache.default_timeout
-
-try:
-    basestring
-except NameError:
-    basestring = (bytes, str)
 
 
 class Viewlet(object):
@@ -38,7 +35,8 @@ class Viewlet(object):
             self.timeout = timeout
         if not cached:
             self.timeout = 0
-            warnings.warn('Keyword argument "cache" is deprecated, use timeout=0 to disable cache', DeprecationWarning)
+            warnings.warn('Keyword argument "cache" is deprecated, use timeout=0 to disable cache',
+                          DeprecationWarning)
 
     def register(self, func):
         """
@@ -63,7 +61,7 @@ class Viewlet(object):
 
     def _build_args(self, *args, **kwargs):
         viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
-        viewlet_func_kwargs.update(dict((k, v) for k, v in kwargs.items() if k in self.viewlet_func_args))
+        viewlet_func_kwargs.update(dict((k, kwargs[k]) for k in kwargs if k in self.viewlet_func_args))
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):
@@ -79,7 +77,7 @@ class Viewlet(object):
         timeout = self.timeout
 
         # Avoid pickling string like objects
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = smart_bytes(value)
         cache.set(key, value, timeout)
 

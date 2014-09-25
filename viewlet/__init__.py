@@ -1,5 +1,6 @@
 # coding=utf-8
-from .api import *
+from __future__ import unicode_literals
+from .api import viewlet, get, call, refresh  # NOQA
 
 VERSION = (1, 3, 0, 'final', 0)
 
