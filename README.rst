@@ -102,8 +102,8 @@ You can then render the viewlet with the ``viewlet`` template tag:
 Specifying cache backend
 ________________________
 
-By default viewlet will try using ``viewlet`` cache backend, falling back to default cache.
-You can specify which backend should be used in settings:
+By default viewlet will try using ``viewlet`` cache alias, falling back to ``default``. You can specify
+which alias should be used in settings:
 
 .. code-block:: python
 
