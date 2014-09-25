@@ -2,7 +2,10 @@
 import warnings
 from inspect import getargspec
 from django.template.context import BaseContext
-from django.utils.encoding import smart_text, smart_bytes
+try:
+    from django.utils.encoding import smart_text, smart_bytes
+except ImportError:
+    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
 
 from viewlet.cache import get_cache
 from viewlet.conf import settings
