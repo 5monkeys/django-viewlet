@@ -99,6 +99,33 @@ You can then render the viewlet with the ``viewlet`` template tag:
     <p>{% viewlet 'host_sponsors', host.id) %}</p>
 
 
+Specifying cache backend
+________________________
+
+By default viewlet will try using ``viewlet`` cache backend, falling back to default cache.
+You can specify which backend should be used in settings:
+
+.. code-block:: python
+
+    VIEWLET_CACHE_BACKEND = 'template_cache'
+
+    CACHES = {
+        # ...
+        'template_cache': {
+            # ...
+        },
+        # ...
+    }
+
+Additionally, you can override cache backend in viewlet decorator with ``using`` argument
+
+.. code-block:: python
+
+    @viewlet(using='super_cache')
+    def hello_user(context, name):
+        return render_to_string('hello_user.html', {'name': name})
+
+
 Refreshing viewlets
 ___________________
 
