@@ -2,7 +2,7 @@ test:
 	python setup.py test
 
 flake8:
-	flake8 --ignore=E501,E128,F401,F403 --max-complexity 14 viewlet
+	flake8 viewlet
 
 install:
 	python setup.py install
@@ -11,4 +11,7 @@ develop:
 	python setup.py develop
 
 coverage:
-	coverage run --include=viewlet/* setup.py test
+	coverage run --source viewlet setup.py test
+
+clean:
+	rm -rf .tox/ dist/ *.egg *.egg-info .coverage

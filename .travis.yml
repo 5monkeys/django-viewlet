@@ -46,7 +46,7 @@ script:
 
 after_script:
   - if [ $COVERAGE == "true" ]; then
-    pip install --quiet --use-mirrors python-coveralls
+    pip install --quiet --use-mirrors python-coveralls;
     make coverage;
     coverage report;
     coveralls;
