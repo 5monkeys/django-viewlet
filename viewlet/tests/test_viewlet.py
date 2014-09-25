@@ -253,9 +253,9 @@ class ViewletCacheBackendTest(TestCase):
             'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
             'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
         }
-        django.conf.settings.VIEWLET_CACHE_BACKEND = 'dummy'
+        django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = 'dummy'
         self._reload_settings()
-        self.assertEqual('dummy', conf.settings.VIEWLET_CACHE_BACKEND)
+        self.assertEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
         @viewlet(template='hello_timestamp.html', timeout=10)
         def hello_cached_timestamp_settings_cache(context, name):
@@ -272,7 +272,7 @@ class ViewletCacheBackendTest(TestCase):
             }
 
     def tearDown(self):
-        django.conf.settings.VIEWLET_CACHE_BACKEND = ''
+        django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = ''
         self._reload_settings()
 
     def test_cache_backend_from_settings(self):

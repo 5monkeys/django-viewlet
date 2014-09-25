@@ -107,7 +107,7 @@ You can specify which backend should be used in settings:
 
 .. code-block:: python
 
-    VIEWLET_CACHE_BACKEND = 'template_cache'
+    VIEWLET_DEFAULT_CACHE_ALIAS = 'template_cache'
 
     CACHES = {
         # ...
