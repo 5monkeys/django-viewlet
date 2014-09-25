@@ -6,7 +6,6 @@ from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from django.test.utils import override_settings
 import viewlet.conf
 import viewlet.models
 from ..exceptions import UnknownViewlet
@@ -243,17 +242,15 @@ class ViewletTest(TestCase):
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
 
 
-@override_settings(
-    CACHES={
-        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
-        'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
-        'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
-    },
-    VIEWLET_CACHE_BACKEND='dummy',
-)
 class ViewletCacheBackendTest(TestCase):
     def setUp(self):
-        self.assertEqual('dummy', django.conf.settings.VIEWLET_CACHE_BACKEND)
+        # Django < 1.4 does not support override_settings
+        django.conf.settings.CACHES = {
+            'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+            'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
+            'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
+        }
+        django.conf.settings.VIEWLET_CACHE_BACKEND = 'dummy'
         self.assertEqual('dummy', reload(viewlet.conf).settings.VIEWLET_CACHE_BACKEND)
         reload(viewlet.models)  # reload models *after* viewlet.conf is reloaded
 
@@ -270,6 +267,10 @@ class ViewletCacheBackendTest(TestCase):
                 'name': name,
                 'timestamp': time(),
             }
+
+    def tearDown(self):
+        django.conf.settings.VIEWLET_CACHE_BACKEND = ''
+        map(reload, [viewlet.conf, viewlet.models])  # reload models *after* viewlet.conf is reloaded
 
     def test_cache_backend_from_settings(self):
         v = viewlet.get('hello_cached_timestamp_settings_cache')
