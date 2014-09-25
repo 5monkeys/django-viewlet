@@ -1,17 +1,20 @@
 # coding=utf-8
 from time import time, sleep
+import django
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from django import VERSION as django_version
 import viewlet
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
+
+if django.VERSION >= (1, 7):
+    django.setup()
 
 cache = get_cache()
 __all__ = ['ViewletTest']
@@ -181,7 +184,7 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, False)
         # Jingo does not support django <= 1.2
-        if django_version[:2] > (1, 2):
+        if django.VERSION[:2] > (1, 2):
             settings.VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
             env = get_env()
             self.assertEqual(env.autoescape, True)
