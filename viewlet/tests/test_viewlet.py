@@ -244,7 +244,7 @@ class ViewletTest(TestCase):
 
 class ViewletCacheBackendTest(TestCase):
     def setUp(self):
-        # Django < 1.4 does not support override_settings
+        # Django 1.3.x does not support override_settings
         django.conf.settings.CACHES = {
             'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
             'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
@@ -273,12 +273,16 @@ class ViewletCacheBackendTest(TestCase):
         map(reload, [viewlet.conf, viewlet.models])  # reload models *after* viewlet.conf is reloaded
 
     def test_cache_backend_from_settings(self):
+        if django.VERSION < (1, 3):
+            return
         v = viewlet.get('hello_cached_timestamp_settings_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is None)
 
     def test_cache_backend_from_argument(self):
+        if django.VERSION < (1, 3):
+            return
         v = viewlet.get('hello_cached_timestamp_argument_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
