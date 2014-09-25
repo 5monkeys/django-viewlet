@@ -21,7 +21,7 @@ class ViewletNode(template.Node):
     def render(self, context):
         try:
             args = [arg.resolve(context) for arg in self.viewlet_args]
-            kwargs = dict((key, value.resolve(context)) for key, value in self.viewlet_kwargs.iteritems())
+            kwargs = dict((key, value.resolve(context)) for key, value in self.viewlet_kwargs.items())
             template = viewlet.call(self.viewlet_name, context, *args, **kwargs)
             return mark_safe(template)
         except UnknownViewlet as e:

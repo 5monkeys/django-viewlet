@@ -32,16 +32,15 @@ else:
     cmdclasses = {'install_data': install_data}
 
 
+readme = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
+if sys.version_info > (3, 0):
+    readme = str(readme)
+
 setup(
     name="django-viewlet",
     version=version,
     description="Render template parts with extended cache control.",
-    long_description=codecs.open(
-        os.path.join(
-            os.path.dirname(__file__),
-            "README.rst"
-        )
-    ).read(),
+    long_description=readme,
     author="Jonas Lundberg",
     author_email="jonas@5monkeys.se",
     url="http://github.com/5monkeys/django-viewlet",

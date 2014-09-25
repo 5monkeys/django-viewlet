@@ -1,13 +1,20 @@
+# coding=utf-8
 import warnings
 from inspect import getargspec
 from django.template.context import BaseContext
-from django.utils.encoding import smart_str, smart_unicode
+from django.utils.encoding import smart_text, smart_bytes
+
 from viewlet.cache import get_cache
 from viewlet.conf import settings
 from viewlet.loaders import render
 
 cache = get_cache()
 DEFAULT_CACHE_TIMEOUT = cache.default_timeout
+
+try:
+    basestring
+except NameError:
+    basestring = (bytes, str)
 
 
 class Viewlet(object):
@@ -40,7 +47,7 @@ class Viewlet(object):
         self.viewlet_func_args = getargspec(func).args
 
         if not self.name:
-            self.name = func.func_name
+            self.name = getattr(func, 'func_name', getattr(func, '__name__'))
 
         func_argcount = len(self.viewlet_func_args) - 1
         if self.timeout:
@@ -53,7 +60,7 @@ class Viewlet(object):
 
     def _build_args(self, *args, **kwargs):
         viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
-        viewlet_func_kwargs.update(dict((k, v) for k, v in kwargs.iteritems() if k in self.viewlet_func_args))
+        viewlet_func_kwargs.update(dict((k, v) for k, v in kwargs.items() if k in self.viewlet_func_args))
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):
@@ -70,7 +77,7 @@ class Viewlet(object):
 
         # Avoid pickling string like objects
         if isinstance(value, basestring):
-            value = smart_str(value)
+            value = smart_bytes(value)
         cache.set(key, value, timeout)
 
     def call(self, *args, **kwargs):
@@ -95,7 +102,7 @@ class Viewlet(object):
             if isinstance(context, BaseContext):
                 context.pop()
 
-        return smart_unicode(output)
+        return smart_text(output)
 
     def _call(self, merged_args, refresh=False):
         """

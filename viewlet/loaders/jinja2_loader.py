@@ -13,7 +13,7 @@ class ViewletExtension(Extension):
     tags = set(['viewlet'])
 
     def parse(self, parser):
-        lineno = parser.stream.next().lineno
+        lineno = next(parser.stream).lineno
 
         viewlet_args = []
         name = None
