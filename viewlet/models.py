@@ -16,13 +16,13 @@ class Viewlet(object):
     """
 
     def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_CACHE_TIMEOUT, cached=True,
-                 backend=None):
+                 using=None):
         self.library = library
         self.name = name
         self.template = template
         self.key = key
         self.key_mod = False
-        self.cache = get_cache(backend=backend or settings.VIEWLET_CACHE_BACKEND)
+        self.cache = get_cache(backend=using or settings.VIEWLET_CACHE_BACKEND)
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
             self.timeout = settings.VIEWLET_INFINITE_CACHE_TIMEOUT
