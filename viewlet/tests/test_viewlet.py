@@ -6,7 +6,7 @@ from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from .. import call, conf, models, get, get_version, refresh, viewlet
+from .. import call, conf, get, get_version, refresh, viewlet
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
@@ -15,6 +15,11 @@ from ..loaders.jinja2_loader import get_env
 
 cache = get_cache()
 __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
+
+
+def reload_settings():
+    from .. import conf, cache, library, models
+    map(reload, [conf, cache, library, models])  # conf must be reloaded first
 
 
 class ViewletTest(TestCase):
@@ -243,9 +248,6 @@ class ViewletTest(TestCase):
 
 class ViewletCacheBackendTest(TestCase):
 
-    def _reload_settings(self):
-        map(reload, [conf, models])  # reload models *after* viewlet.conf is reloaded
-
     def setUp(self):
         # Django 1.3.x does not support override_settings
         django.conf.settings.CACHES = {
@@ -254,7 +256,8 @@ class ViewletCacheBackendTest(TestCase):
             'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
         }
         django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = 'dummy'
-        self._reload_settings()
+        self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+        reload_settings()
         self.assertEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
         @viewlet(template='hello_timestamp.html', timeout=10)
@@ -272,8 +275,9 @@ class ViewletCacheBackendTest(TestCase):
             }
 
     def tearDown(self):
-        django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = ''
-        self._reload_settings()
+        del django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS
+        reload_settings()
+        self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
     def test_cache_backend_from_settings(self):
         if django.VERSION < (1, 3):
