@@ -108,6 +108,8 @@ A cached viewlet can be re-rendered and updated behind the scenes with ``viewlet
 
     import viewlet
     viewlet.refresh('hello_user', 'monkey')
+    # or
+    hello_user.refresh('monkey')
 
 
 The decorator
