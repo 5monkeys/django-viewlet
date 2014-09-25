@@ -49,5 +49,5 @@ after_script:
     pip install --quiet --use-mirrors python-coveralls;
     make coverage;
     coverage report;
-    coveralls;
+    coveralls --ignore-errors;
     fi
