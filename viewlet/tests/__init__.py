@@ -1,2 +1,2 @@
 # coding=utf-8
-from .test_viewlet import *
+from .test_viewlet import ViewletTest  # NOQA

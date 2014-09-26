@@ -1,12 +1,21 @@
 # coding=utf-8
+from __future__ import unicode_literals
+import six
 import warnings
 from inspect import getargspec
-from django.template.context import BaseContext
-from django.utils.encoding import smart_str, smart_unicode
-from viewlet.cache import get_cache
-from viewlet.conf import settings
-from viewlet.loaders import render
+try:
+    from django.template.context import BaseContext
+except ImportError:
+    from django.template.context import Context as BaseContext  # Django < 1.2
+try:
+    from django.utils.encoding import smart_text, smart_bytes
+except ImportError:
+    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
+
+from .cache import get_cache
+from .conf import settings
 from .const import DEFAULT_TIMEOUT
+from .loaders import render
 
 
 class Viewlet(object):
@@ -14,8 +23,8 @@ class Viewlet(object):
     Representation of a viewlet
     """
 
-    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, cached=True,
-                 using=None):
+    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, using=None,
+                 cached=True):
         self.library = library
         self.name = name
         self.template = template
@@ -44,7 +53,7 @@ class Viewlet(object):
         self.viewlet_func_args = getargspec(func).args
 
         if not self.name:
-            self.name = func.func_name
+            self.name = getattr(func, 'func_name', getattr(func, '__name__'))
 
         func_argcount = len(self.viewlet_func_args) - 1
         if self.timeout:
@@ -53,11 +62,15 @@ class Viewlet(object):
             self.key_mod = func_argcount > 0
         self.library.add(self)
 
-        return self.call
+        def call_with_refresh(*args, **kwargs):
+            return self.call(*args, **kwargs)
+        setattr(call_with_refresh, 'refresh', self.refresh)
+
+        return call_with_refresh
 
     def _build_args(self, *args, **kwargs):
         viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
-        viewlet_func_kwargs.update(dict((k, v) for k, v in kwargs.iteritems() if k in self.viewlet_func_args))
+        viewlet_func_kwargs.update(dict((k, kwargs[k]) for k in kwargs if k in self.viewlet_func_args))
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):
@@ -73,8 +86,8 @@ class Viewlet(object):
         timeout = self.timeout
 
         # Avoid pickling string like objects
-        if isinstance(value, basestring):
-            value = smart_str(value)
+        if isinstance(value, six.string_types):
+            value = smart_bytes(value)
         self.cache.set(key, value, timeout)
 
     def call(self, *args, **kwargs):
@@ -99,7 +112,7 @@ class Viewlet(object):
             if isinstance(context, BaseContext):
                 context.pop()
 
-        return smart_unicode(output)
+        return smart_text(output)
 
     def _call(self, merged_args, refresh=False):
         """
