@@ -3,7 +3,10 @@ from __future__ import unicode_literals
 import six
 import warnings
 from inspect import getargspec
-from django.template.context import BaseContext
+try:
+    from django.template.context import BaseContext
+except ImportError:
+    from django.template.context import Context as BaseContext  # Django < 1.2
 try:
     from django.utils.encoding import smart_text, smart_bytes
 except ImportError:
@@ -14,6 +17,9 @@ from viewlet.conf import settings
 from viewlet.loaders import render
 
 cache = get_cache()
+if not hasattr(cache, 'clear'):
+    cache.clear = cache._cache.clear  # Django < 1.2
+
 DEFAULT_CACHE_TIMEOUT = cache.default_timeout
 
 

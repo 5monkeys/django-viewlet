@@ -43,8 +43,11 @@ def main():
     settings.configure(**conf)
 
     from django.test.utils import get_runner
-    test_runner = get_runner(settings)(verbosity=2, interactive=True)
-    failures = test_runner.run_tests(['viewlet'])
+    if django.VERSION < (1, 2):
+        failures = get_runner(settings)(['viewlet'], verbosity=2, interactive=True)
+    else:
+        test_runner = get_runner(settings)(verbosity=2, interactive=True)
+        failures = test_runner.run_tests(['viewlet'])
 
     sys.exit(failures)
 
