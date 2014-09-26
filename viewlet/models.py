@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import six
 import warnings
 from inspect import getargspec
+from django.utils.importlib import import_module
+
 try:
     from django.template.context import BaseContext
 except ImportError:
@@ -18,6 +20,14 @@ from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
 
+def import_by_path(path):
+    m, _, f = settings.VIEWLET_ARGS_DIGEST_FUNCTION.rpartition('.')
+    return getattr(import_module(m), f)
+
+
+arg_digest_func = import_by_path(settings.VIEWLET_ARGS_DIGEST_FUNCTION)
+
+
 class Viewlet(object):
     """
     Representation of a viewlet
@@ -29,7 +39,8 @@ class Viewlet(object):
         self.name = name
         self.template = template
         self.key = key
-        self.key_mod = False
+        self.has_args = False
+        self.cache_alias = using
         self.cache = get_cache(alias=using)
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
@@ -43,6 +54,8 @@ class Viewlet(object):
             warnings.warn('Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
                           DeprecationWarning)
 
+        self.arg_digest_func = arg_digest_func
+
     def register(self, func):
         """
         Initial decorator wrapper that configures the viewlet instance,
@@ -51,15 +64,25 @@ class Viewlet(object):
         """
         self.viewlet_func = func
         self.viewlet_func_args = getargspec(func).args
+        self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
             self.name = getattr(func, 'func_name', getattr(func, '__name__'))
 
-        func_argcount = len(self.viewlet_func_args) - 1
-        if self.timeout:
-            # TODO: HASH KEY
-            self.key = u'viewlet:%s(%s)' % (self.name, ','.join(['%s' for _ in range(0, func_argcount)]))
-            self.key_mod = func_argcount > 0
+        key = u'viewlet:' + self.name
+        if self.is_using_cache():
+            if self.key and self.has_args:
+                assert '{dig}' in self.key, \
+                    u"If you want to use your custom key for a viewlet which has arguments, please add " \
+                    u"`{dig}` to the key where digest of the arguments will be inserted."
+
+            if not self.key:
+                self.key = key
+                if self.has_args:
+                    self.key += u':{dig}'
+        else:
+            self.key = key
+
         self.library.add(self)
 
         def call_with_refresh(*args, **kwargs):
@@ -77,7 +100,14 @@ class Viewlet(object):
         """
         Build cache key based on viewlet argument except initial context argument.
         """
-        return self.key if not self.key_mod else self.key % tuple(args)
+        if self.has_args:
+            key = self.key.format(dig=self.arg_digest_func(self, args))
+        else:
+            key = self.key
+        max_len = settings.VIEWLET_MAX_CACHE_KEY_LENGTH
+        assert len(key) <= max_len, \
+            u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(key=key, max_len=max_len)
+        return key
 
     def _cache_get(self, key):
         return self.cache.get(key)

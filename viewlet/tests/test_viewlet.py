@@ -297,7 +297,7 @@ class ViewletCacheBackendTest(TestCase):
         v = get('hello_cached_timestamp_settings_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        self.assertTrue(v.cache.get(cache_key) is None)
+        self.assertIsNone(v._cache_get(cache_key))
 
     def test_cache_backend_from_argument(self):
         if django.VERSION < (1, 3):
@@ -305,6 +305,6 @@ class ViewletCacheBackendTest(TestCase):
         v = get('hello_cached_timestamp_argument_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        self.assertTrue(v.cache.get(cache_key) is not None)
+        self.assertIsNotNone(v._cache_get(cache_key))
         sleep(0.011)
-        self.assertTrue(v.cache.get(cache_key) is None)
+        self.assertIsNone(v._cache_get(cache_key))
