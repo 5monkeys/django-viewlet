@@ -59,7 +59,8 @@ class Library(dict):
         if viewlet.name not in self.keys():
             self[viewlet.name] = viewlet
 
-    def _decorator(self, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, using=None, cached=True):
+    def _decorator(self, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, using=None,
+                   cached=True):
         """
         Handles both decorator pointer and caller (with or without arguments).
         Creates a Viewlet instance to wrap the decorated function with.

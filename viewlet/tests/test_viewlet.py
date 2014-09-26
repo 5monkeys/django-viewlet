@@ -23,7 +23,7 @@ __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
 def reload_settings():
-    from .. import conf, cache, library, models
+    from .. import cache, library, models
     map(reload, [conf, cache, library, models])  # conf must be reloaded first
 
 
