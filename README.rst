@@ -1,9 +1,13 @@
+# coding=utf-8
 .. image:: https://raw.github.com/5monkeys/django-viewlet/master/docs/django_viewlet.png
 
 Render template parts with extended cache control.
 
 .. image:: https://travis-ci.org/5monkeys/django-viewlet.png?branch=master
     :target: http://travis-ci.org/5monkeys/django-viewlet
+
+.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.png?branch=master
+    :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
 
 Installation
 ------------
