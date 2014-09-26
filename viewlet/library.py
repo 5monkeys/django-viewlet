@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 import types
+from .const import DEFAULT_TIMEOUT
 
 
 class Singleton(type):
@@ -58,7 +59,8 @@ class Library(dict):
         if viewlet.name not in self.keys():
             self[viewlet.name] = viewlet
 
-    def _decorator(self, name=None, template=None, key=None, timeout=60, cached=True):
+    def _decorator(self, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, using=None,
+                   cached=True):
         """
         Handles both decorator pointer and caller (with or without arguments).
         Creates a Viewlet instance to wrap the decorated function with.
@@ -71,7 +73,8 @@ class Library(dict):
                 return viewlet.register(func)
             return declare(name)
         else:
-            viewlet = Viewlet(self, name, template, key, timeout, cached)
+            viewlet = Viewlet(self, name=name, template=template, key=key, timeout=timeout, using=using,
+                              cached=cached)
             return viewlet.register
 
 

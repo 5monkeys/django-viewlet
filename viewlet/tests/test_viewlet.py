@@ -1,14 +1,15 @@
 # coding=utf-8
 from __future__ import unicode_literals
+import imp
 import six
 from time import time, sleep
-import django
+import django.conf
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-import viewlet
+from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
@@ -19,7 +20,7 @@ if django.VERSION >= (1, 7):
     django.setup()
 
 cache = get_cache()
-__all__ = ['ViewletTest']
+__all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
 class ViewletTest(TestCase):
@@ -28,32 +29,32 @@ class ViewletTest(TestCase):
         cache.clear()
         settings.VIEWLET_TEMPLATE_ENGINE = 'django'
 
-        @viewlet.viewlet
+        @viewlet
         def hello_world(context):
             return u'Hello wörld!'
 
-        @viewlet.viewlet
+        @viewlet
         def hello_name(context, name=u"wurld"):
             return u'Hello %s' % name
 
-        @viewlet.viewlet(template='hello_world.html', cached=False)
+        @viewlet(template='hello_world.html', cached=False)
         def hello_nocache(context, name="wurld"):
             return {'name': name}
 
-        @viewlet.viewlet(template='hello_world.html', timeout=10)
+        @viewlet(template='hello_world.html', timeout=10)
         def hello_cache(context, name):
             return {
                 'name': name,
                 'timestamp': time(),
             }
 
-        @viewlet.viewlet(name='hello_new_name', template='hello_world.html', timeout=10)
+        @viewlet(name='hello_new_name', template='hello_world.html', timeout=10)
         def hello_named_world(context, name):
             return {
                 'name': name,
             }
 
-        @viewlet.viewlet(template='hello_timestamp.html', timeout=10)
+        @viewlet(template='hello_timestamp.html', timeout=10)
         def hello_cached_timestamp(context, name):
             return {
                 'name': name,
@@ -61,27 +62,27 @@ class ViewletTest(TestCase):
             }
         self.hello_cached_timestamp = hello_cached_timestamp
 
-        @viewlet.viewlet(template='hello_timestamp.html', timeout=None)
+        @viewlet(template='hello_timestamp.html', timeout=None)
         def hello_infinite_cache(context, name):
             return {
                 'name': name,
                 'timestamp': time(),
             }
 
-        @viewlet.viewlet(template='hello_timestamp.html', cached=False)
+        @viewlet(template='hello_timestamp.html', cached=False)
         def hello_non_cached_timestamp(context, name):
             return {
                 'name': name,
                 'timestamp': time(),
             }
 
-        @viewlet.viewlet(template='hello_strong_world.html', timeout=10)
+        @viewlet(template='hello_strong_world.html', timeout=10)
         def hello_strong(context, name):
             return {
                 'name': name
             }
 
-        @viewlet.viewlet(template='hello_request.html', timeout=0)
+        @viewlet(template='hello_request.html', timeout=0)
         def hello_request(context, greeting):
             return {
                 'greeting': greeting
@@ -103,23 +104,23 @@ class ViewletTest(TestCase):
         return get_template_from_string(source).render(Context(context or {})).strip()
 
     def test_version(self):
-        self.assertEqual(viewlet.get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')
-        self.assertEqual(viewlet.get_version((1, 2, 3, 'beta', 2)), '1.2.3b2')
-        self.assertEqual(viewlet.get_version((1, 2, 3, 'rc', 3)), '1.2.3c3')
-        self.assertEqual(viewlet.get_version((1, 2, 3, 'final', 4)), '1.2.3')
+        self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')
+        self.assertEqual(get_version((1, 2, 3, 'beta', 2)), '1.2.3b2')
+        self.assertEqual(get_version((1, 2, 3, 'rc', 3)), '1.2.3c3')
+        self.assertEqual(get_version((1, 2, 3, 'final', 4)), '1.2.3')
 
     def test_get_existing_viewlet(self):
-        viewlet.get('hello_cache')
+        get('hello_cache')
 
     def test_get_non_existing_viewlet(self):
-        self.assertRaises(UnknownViewlet, viewlet.get, 'i_do_not_exist')
+        self.assertRaises(UnknownViewlet, get, 'i_do_not_exist')
 
     def test_empty_decorator(self):
         template = self.get_django_template("<h1>{% viewlet hello_world %}</h1>")
         html1 = self.render(template)
         self.assertEqual(html1, u'<h1>Hello wörld!</h1>')
-        html2 = self.render(template)
         sleep(0.01)
+        html2 = self.render(template)
         self.assertEqual(html1, html2)
 
     def test_render_tag(self):
@@ -146,15 +147,15 @@ class ViewletTest(TestCase):
         self.assertNotEqual(html1, html2)
 
     def test_cache(self):
-        html1 = viewlet.call('hello_cache', None, 'world')
+        html1 = call('hello_cache', None, 'world')
         sleep(0.01)
-        html2 = viewlet.call('hello_cache', None, 'world')
+        html2 = call('hello_cache', None, 'world')
         self.assertEquals(html1, html2)
 
     def test_unicode_cache(self):
-        html1 = viewlet.call('hello_cache', None, u'wörld')
+        html1 = call('hello_cache', None, u'wörld')
         sleep(0.01)
-        html2 = viewlet.call('hello_cache', None, u'wörld')
+        html2 = call('hello_cache', None, u'wörld')
         self.assertEquals(html1, html2)
 
     def test_refresh(self):
@@ -162,7 +163,7 @@ class ViewletTest(TestCase):
         html1 = self.render(template)
 
         sleep(0.01)
-        viewlet.refresh('hello_cached_timestamp', 'world')
+        refresh('hello_cached_timestamp', 'world')
         html2 = self.render(template)
         self.assertNotEqual(html1, html2)
 
@@ -176,7 +177,7 @@ class ViewletTest(TestCase):
         url = reverse('viewlet', args=['hello_cache'])
         response = client.get(url, {'name': u'wörld'})
         self.assertEqual(response.status_code, 200)
-        html = viewlet.call('hello_cache', None, u'wörld')
+        html = call('hello_cache', None, u'wörld')
         self.assertEqual(response.content.decode('utf-8'), html)
 
     def test_jinja_tag(self):
@@ -203,7 +204,7 @@ class ViewletTest(TestCase):
     def test_context_tag(self):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
         self.render(template)
-        v = viewlet.get('hello_cached_timestamp')
+        v = get('hello_cached_timestamp')
         cache_key = v._build_cache_key('world')
         viewlet_data = cache.get(cache_key)
         self.assertTrue('name' in viewlet_data)
@@ -213,14 +214,13 @@ class ViewletTest(TestCase):
     def test_infinite_cache(self):
         template = self.get_django_template("<h1>{% viewlet hello_infinite_cache 'world' %}</h1>")
         self.render(template)
-        v = viewlet.get('hello_infinite_cache')
+        v = get('hello_infinite_cache')
         self.assertEqual(v.timeout, settings.VIEWLET_INFINITE_CACHE_TIMEOUT)
 
     def test_expire_cache(self):
-        v = viewlet.get('hello_cache')
+        v = get('hello_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        sleep(0.01)
         self.assertTrue(cache.get(cache_key) is not None)
         v.expire('world')
         self.assertTrue(cache.get(cache_key) is None)
@@ -239,7 +239,7 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_name name='wörld' %}</h1>")
         html = self.render(template)
         self.assertTrue(isinstance(html, six.text_type))
-        v = viewlet.get('hello_name')
+        v = get('hello_name')
         cache_key = v._build_cache_key(u'wörld')
         cached_value = cache.get(cache_key)
         self.assertTrue(isinstance(cached_value, six.binary_type))
@@ -247,10 +247,64 @@ class ViewletTest(TestCase):
     def test_named(self):
         template = self.get_django_template("<h1>{% viewlet hello_new_name 'wörld' %}</h1>")
         self.render(template)
-        self.assertTrue(viewlet.get('hello_new_name') is not None)
+        self.assertTrue(get('hello_new_name') is not None)
 
     def test_refreshing_context_viewlet_expecting_request_while_rendering_using_jinja2(self):
         template = self.get_jinja_template("{% viewlet 'hello_request', 'nice to see you' %}")
         html = template.render({'request': {'user': 'nicolas cage'}})
-        viewlet.refresh('hello_request', 'nice to see you')
+        refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
+
+
+class ViewletCacheBackendTest(TestCase):
+
+    def setUp(self):
+        # Django 1.3.x does not support override_settings
+        django.conf.settings.CACHES = {
+            'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+            'short': {'BACKEND': 'viewlet.tests.utils.ShortLocMemCache'},
+            'dummy': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'},
+        }
+        django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = 'dummy'
+        self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+
+        @viewlet(template='hello_timestamp.html', timeout=10)
+        def hello_cached_timestamp_settings_cache(context, name):
+            return {
+                'name': name,
+                'timestamp': time(),
+            }
+
+        @viewlet(template='hello_timestamp.html', using='short')
+        def hello_cached_timestamp_argument_cache(context, name):
+            return {
+                'name': name,
+                'timestamp': time(),
+            }
+
+    def tearDown(self):
+        del django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+
+    def test_cache_backend_from_settings(self):
+        if django.VERSION < (1, 3):
+            return
+        v = get('hello_cached_timestamp_settings_cache')
+        v.call({}, 'world')
+        cache_key = v._build_cache_key('world')
+        self.assertTrue(v.cache.get(cache_key) is None)
+
+    def test_cache_backend_from_argument(self):
+        if django.VERSION < (1, 3):
+            return
+        v = get('hello_cached_timestamp_argument_cache')
+        v.call({}, 'world')
+        cache_key = v._build_cache_key('world')
+        self.assertTrue(v.cache.get(cache_key) is not None)
+        sleep(0.011)
+        self.assertTrue(v.cache.get(cache_key) is None)

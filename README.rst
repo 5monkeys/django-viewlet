@@ -104,6 +104,33 @@ You can then render the viewlet with the ``viewlet`` template tag:
     <p>{% viewlet 'host_sponsors', host.id) %}</p>
 
 
+Specifying cache backend
+________________________
+
+By default viewlet will try using ``viewlet`` cache alias, falling back to ``default``. You can specify
+which alias should be used in settings:
+
+.. code-block:: python
+
+    VIEWLET_DEFAULT_CACHE_ALIAS = 'template_cache'
+
+    CACHES = {
+        # ...
+        'template_cache': {
+            # ...
+        },
+        # ...
+    }
+
+Additionally, you can override cache backend in viewlet decorator with ``using`` argument
+
+.. code-block:: python
+
+    @viewlet(using='super_cache')
+    def hello_user(context, name):
+        return render_to_string('hello_user.html', {'name': name})
+
+
 Refreshing viewlets
 ___________________
 

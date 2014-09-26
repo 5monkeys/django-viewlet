@@ -1,12 +1,14 @@
 # coding=utf-8
 from __future__ import unicode_literals
-from django.core.cache import InvalidCacheBackendError
+from .conf import settings
 
 
-def get_cache():
+def get_cache(alias=None):
+    from django.core import cache
     try:
-        from django.core.cache import get_cache
-        cache = get_cache('viewlet')
-    except (InvalidCacheBackendError, ValueError):
-        from django.core.cache import cache
-    return cache
+        c = cache.get_cache(alias or settings.VIEWLET_DEFAULT_CACHE_ALIAS)
+    except (cache.InvalidCacheBackendError, ValueError):
+        c = cache.cache
+    if not hasattr(c, 'clear'):  # Django < 1.2
+        c.clear = c._cache.clear
+    return c
