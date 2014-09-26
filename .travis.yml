@@ -45,7 +45,7 @@ script:
   - make flake8 test
 
 after_script:
-  - if [ $COVERAGE == "true" ]; then
+  - if [ "$COVERAGE" == "true" ]; then
     pip install --quiet --use-mirrors python-coveralls;
     make coverage;
     coverage report;

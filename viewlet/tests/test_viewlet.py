@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import unicode_literals
+import imp
 import six
 from time import time, sleep
 import django.conf
@@ -8,7 +9,7 @@ from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from .. import call, conf, get, get_version, refresh, viewlet
+from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache
 from ..conf import settings
@@ -20,11 +21,6 @@ if django.VERSION >= (1, 7):
 
 cache = get_cache()
 __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
-
-
-def reload_settings():
-    from .. import cache, library, models
-    map(reload, [conf, cache, library, models])  # conf must be reloaded first
 
 
 class ViewletTest(TestCase):
@@ -271,7 +267,8 @@ class ViewletCacheBackendTest(TestCase):
         }
         django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = 'dummy'
         self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
-        reload_settings()
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
         self.assertEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
         @viewlet(template='hello_timestamp.html', timeout=10)
@@ -290,7 +287,8 @@ class ViewletCacheBackendTest(TestCase):
 
     def tearDown(self):
         del django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS
-        reload_settings()
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
         self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
     def test_cache_backend_from_settings(self):
