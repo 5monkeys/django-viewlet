@@ -1,9 +1,14 @@
+# coding=utf-8
+
 .. image:: https://raw.github.com/5monkeys/django-viewlet/master/docs/django_viewlet.png
 
 Render template parts with extended cache control.
 
 .. image:: https://travis-ci.org/5monkeys/django-viewlet.png?branch=master
     :target: http://travis-ci.org/5monkeys/django-viewlet
+
+.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.png?branch=master
+    :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
 
 Installation
 ------------
@@ -14,7 +19,7 @@ Install django-viewlet in your python environment
 
     $ pip install django-viewlet
 
-Supports ``Django`` version 1.2 - 1.5 and ``Python`` version 2.6 - 2.7.
+Supports ``Django`` versions 1.2 - 1.7 and ``Python`` versions 2.6 - 3.4.
 
 
 Configuration

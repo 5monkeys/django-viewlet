@@ -1,3 +1,5 @@
+# coding=utf-8
+from __future__ import unicode_literals
 from django.conf import settings as django_settings
 
 
@@ -7,8 +9,8 @@ class ViewletSettings(dict):
         super(ViewletSettings, self).__init__(conf)
 
         # Override defaults with django settings
-        for key, value in conf.iteritems():
-            setattr(self, key, getattr(django_settings, key, value))
+        for key in conf:
+            setattr(self, key, getattr(django_settings, key, conf[key]))
 
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
