@@ -110,7 +110,10 @@ class Viewlet(object):
         return key
 
     def _cache_get(self, key):
-        return self.cache.get(key)
+        s = self.cache.get(key)
+        if isinstance(s, six.binary_type):
+            s = smart_text(s)
+        return s
 
     def _cache_set(self, key, value):
         timeout = self.timeout
