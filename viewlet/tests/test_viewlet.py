@@ -11,7 +11,7 @@ from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
-from ..cache import get_cache
+from ..cache import get_cache, make_key_args_join
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
@@ -20,7 +20,7 @@ if django.VERSION >= (1, 7):
     django.setup()
 
 cache = get_cache()
-__all__ = ['ViewletTest', 'ViewletCacheBackendTest']
+__all__ = ['ViewletTest', 'ViewletCacheBackendTest', 'ViewletKeyDigestTest']
 
 
 class ViewletTest(TestCase):
@@ -308,3 +308,30 @@ class ViewletCacheBackendTest(TestCase):
         self.assertIsNotNone(v._cache_get(cache_key))
         sleep(0.011)
         self.assertIsNone(v._cache_get(cache_key))
+
+
+class ViewletKeyDigestTest(TestCase):
+
+    def test_key_args_join(self):
+        self.key_func = 'viewlet.cache.make_key_args_join'
+        django.conf.settings.VIEWLET_CACHE_KEY_FUNCTION = self.key_func
+        self.assertNotEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)
+
+        @viewlet(timeout=10)
+        def name_args_join(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        v = get('name_args_join')
+        args = ('Hello', 'world')
+        v.call({}, *args)
+        cache_key = v._build_cache_key(*args)
+        self.assertEqual(cache_key, make_key_args_join(v, args))
+        self.assertEqual(v._cache_get(cache_key), u'%s %s!' % args)
+
+        del django.conf.settings.VIEWLET_CACHE_KEY_FUNCTION
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertNotEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)

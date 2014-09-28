@@ -21,11 +21,11 @@ from .loaders import render
 
 
 def import_by_path(path):
-    m, _, f = settings.VIEWLET_ARGS_DIGEST_FUNCTION.rpartition('.')
+    m, _, f = path.rpartition('.')
     return getattr(import_module(m), f)
 
 
-arg_digest_func = import_by_path(settings.VIEWLET_ARGS_DIGEST_FUNCTION)
+make_key_func = import_by_path(settings.VIEWLET_CACHE_KEY_FUNCTION)
 
 
 class Viewlet(object):
@@ -54,7 +54,7 @@ class Viewlet(object):
             warnings.warn('Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
                           DeprecationWarning)
 
-        self.arg_digest_func = arg_digest_func
+        self.make_key_func = make_key_func
 
     def register(self, func):
         """
@@ -69,19 +69,10 @@ class Viewlet(object):
         if not self.name:
             self.name = getattr(func, 'func_name', getattr(func, '__name__'))
 
-        key = u'viewlet:' + self.name
-        if self.is_using_cache():
-            if self.key and self.has_args:
-                assert '{dig}' in self.key, \
-                    u"If you want to use your custom key for a viewlet which has arguments, please add " \
-                    u"`{dig}` to the key where digest of the arguments will be inserted."
-
-            if not self.key:
-                self.key = key
-                if self.has_args:
-                    self.key += u':{dig}'
-        else:
-            self.key = key
+        if self.is_using_cache() and self.key and self.has_args:
+            assert '{args}' in self.key, \
+                u"If you want to use your custom key for a viewlet which has arguments, please add " \
+                u"`{args}` to the key where the arguments will be inserted."
 
         self.library.add(self)
 
@@ -100,11 +91,11 @@ class Viewlet(object):
         """
         Build cache key based on viewlet argument except initial context argument.
         """
-        if self.has_args:
-            key = self.key.format(dig=self.arg_digest_func(self, args))
-        else:
+        if self.key and not self.has_args:
             key = self.key
-        max_len = settings.VIEWLET_MAX_CACHE_KEY_LENGTH
+        else:
+            key = self.make_key_func(self, args)
+        max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
         assert len(key) <= max_len, \
             u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(key=key, max_len=max_len)
         return key

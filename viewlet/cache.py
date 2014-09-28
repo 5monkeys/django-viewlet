@@ -1,6 +1,5 @@
 # coding=utf-8
 from __future__ import unicode_literals
-import six
 import hashlib
 from .conf import settings
 
@@ -16,13 +15,22 @@ def get_cache(alias=None):
     return c
 
 
-def build_args_join(viewlet, args):
-    s = u':'.join(map(repr, args))
-    if six.PY3:
-        s = s.encode('utf8')
-    return s
+def join_args(args):
+    return u':'.join(map(repr, args))
 
 
-def build_args_digest(viewlet, args):
-    s = build_args_join(viewlet, args)
-    return hashlib.sha1(s).hexdigest()
+def digest_args(args):
+    return hashlib.sha1(join_args(args).encode('utf8')).hexdigest()
+
+
+def make_key_args_fmt(viewlet, args):
+    fmt = viewlet.key or 'viewlet:%s:{args}' % viewlet.name
+    return fmt.format(args=args)
+
+
+def make_key_args_join(viewlet, args):
+    return make_key_args_fmt(viewlet, join_args(args))
+
+
+def make_key_args_digest(viewlet, args):
+    return make_key_args_fmt(viewlet, digest_args(args))
