@@ -9,7 +9,7 @@ from django.template import Context
 from django.template import TemplateSyntaxError
 from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
-from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
+from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models, exceptions
 from ..exceptions import UnknownViewlet
 from ..cache import get_cache, make_key_args_join
 from ..conf import settings
@@ -20,7 +20,7 @@ if django.VERSION >= (1, 7):
     django.setup()
 
 cache = get_cache()
-__all__ = ['ViewletTest', 'ViewletCacheBackendTest', 'ViewletKeyDigestTest']
+__all__ = ['ViewletTest', 'ViewletCacheBackendTest', 'ViewletKeyTest']
 
 
 class ViewletTest(TestCase):
@@ -310,7 +310,48 @@ class ViewletCacheBackendTest(TestCase):
         self.assertIsNone(v._cache_get(cache_key))
 
 
-class ViewletKeyDigestTest(TestCase):
+class ViewletKeyTest(TestCase):
+
+    def setUp(self):
+        @viewlet(timeout=1, key='somekey')
+        def custom_key_without_args(context):
+            return u'hello'
+
+        @viewlet(timeout=1, key='somekey')
+        def custom_key_missing_args(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        @viewlet(timeout=1, key='somekey:{args}')
+        def custom_key_with_args(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        @viewlet(timeout=1, key='somekey(%s,%s)')
+        def custom_key_old_format(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+    def test_custom_key_without_args(self):
+        v = get('custom_key_without_args')
+        self.assertEqual(v._build_cache_key(), 'somekey')
+
+    def test_custom_key_missing_args(self):
+        v = get('custom_key_missing_args')
+        args = ('Hello', 'world')
+        self.assertRaisesMessage(exceptions.WrongKeyFormat, exceptions.WRONG_KEY_FORMAT_MESSAGE,
+                                 v._build_cache_key, *args)
+
+    def test_custom_key_with_args(self):
+        v = get('custom_key_with_args')
+        args = ('Hello', 'world')
+        v.call({}, *args)
+        cache_key = v._build_cache_key(*args)
+        self.assertTrue(v._build_cache_key().startswith('somekey:'))
+        self.assertEqual(v._cache_get(cache_key), u'%s %s!' % args)
+
+    def test_custom_key_old_format(self):
+        v = get('custom_key_old_format')
+        args = ('Hello', 'world')
+        self.assertRaisesMessage(exceptions.DeprecatedKeyFormat, exceptions.DEPRECATED_KEY_FORMAT_MESSAGE,
+                                 v._build_cache_key, *args)
 
     def test_key_args_join(self):
         self.key_func = 'viewlet.cache.make_key_args_join'

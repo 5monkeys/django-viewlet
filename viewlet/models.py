@@ -25,7 +25,7 @@ def import_by_path(path):
     return getattr(import_module(m), f)
 
 
-make_key_func = import_by_path(settings.VIEWLET_CACHE_KEY_FUNCTION)
+default_key_func = import_by_path(settings.VIEWLET_CACHE_KEY_FUNCTION)
 
 
 class Viewlet(object):
@@ -54,8 +54,6 @@ class Viewlet(object):
             warnings.warn('Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
                           DeprecationWarning)
 
-        self.make_key_func = make_key_func
-
     def register(self, func):
         """
         Initial decorator wrapper that configures the viewlet instance,
@@ -68,11 +66,6 @@ class Viewlet(object):
 
         if not self.name:
             self.name = getattr(func, 'func_name', getattr(func, '__name__'))
-
-        if self.is_using_cache() and self.key and self.has_args:
-            assert '{args}' in self.key, \
-                u"If you want to use your custom key for a viewlet which has arguments, please add " \
-                u"`{args}` to the key where the arguments will be inserted."
 
         self.library.add(self)
 
@@ -91,10 +84,11 @@ class Viewlet(object):
         """
         Build cache key based on viewlet argument except initial context argument.
         """
-        if self.key and not self.has_args:
-            key = self.key
+        key = self.key
+        if key and callable(key):
+            key = key(self, args)
         else:
-            key = self.make_key_func(self, args)
+            key = default_key_func(self, args)
         max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
         assert len(key) <= max_len, \
             u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(key=key, max_len=max_len)
@@ -143,7 +137,10 @@ class Viewlet(object):
         Executes the actual call to the viewlet function and handles all the cache logic
         """
 
-        cache_key = self._build_cache_key(*merged_args[1:])
+        if self.is_using_cache():
+            cache_key = self._build_cache_key(*merged_args[1:])
+        else:
+            cache_key = None
 
         if refresh or not self.is_using_cache():
             output = None

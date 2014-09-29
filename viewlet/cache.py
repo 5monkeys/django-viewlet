@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import hashlib
 from .conf import settings
+from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
 
 
 def get_cache(alias=None):
@@ -24,6 +25,12 @@ def digest_args(args):
 
 
 def make_key_args_fmt(viewlet, args):
+    if viewlet.key:
+        if '%' in viewlet.key:
+            raise DeprecatedKeyFormat
+        if viewlet.has_args and '{args}' not in viewlet.key:
+            raise WrongKeyFormat
+
     fmt = viewlet.key or 'viewlet:%s:{args}' % viewlet.name
     return fmt.format(args=args)
 
