@@ -336,8 +336,7 @@ class ViewletKeyTest(TestCase):
     def test_custom_key_missing_args(self):
         v = get('custom_key_missing_args')
         args = ('Hello', 'world')
-        self.assertRaisesMessage(exceptions.WrongKeyFormat, exceptions.WRONG_KEY_FORMAT_MESSAGE,
-                                 v._build_cache_key, *args)
+        self.assertRaises(exceptions.WrongKeyFormat, v._build_cache_key, *args)
 
     def test_custom_key_with_args(self):
         v = get('custom_key_with_args')
@@ -350,8 +349,7 @@ class ViewletKeyTest(TestCase):
     def test_custom_key_old_format(self):
         v = get('custom_key_old_format')
         args = ('Hello', 'world')
-        self.assertRaisesMessage(exceptions.DeprecatedKeyFormat, exceptions.DEPRECATED_KEY_FORMAT_MESSAGE,
-                                 v._build_cache_key, *args)
+        self.assertRaises(exceptions.DeprecatedKeyFormat, v._build_cache_key, *args)
 
     def test_key_args_join(self):
         self.key_func = 'viewlet.cache.make_key_args_join'
