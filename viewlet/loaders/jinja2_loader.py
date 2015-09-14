@@ -1,9 +1,10 @@
 # coding=utf-8
 from __future__ import unicode_literals
+import six
 from django.conf import settings as django_settings
-try:
+if six.PY3:
     from importlib import import_module
-except ImportError:
+else:
     from django.utils.importlib import import_module
 from jinja2 import FileSystemLoader, PackageLoader, ChoiceLoader, nodes
 from jinja2.environment import Environment
