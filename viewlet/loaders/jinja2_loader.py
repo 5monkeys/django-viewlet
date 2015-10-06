@@ -1,6 +1,5 @@
 # coding=utf-8
 from __future__ import unicode_literals
-import six
 from django.conf import settings as django_settings
 from importlib import import_module
 from jinja2 import FileSystemLoader, PackageLoader, ChoiceLoader, nodes
