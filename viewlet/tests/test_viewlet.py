@@ -11,7 +11,7 @@ from django.template import TemplateSyntaxError
 if django.VERSION[:2] < (1, 8):
     from django.template.loader import get_template_from_string
 else:
-    from django.template import Engine
+    from django.template import engines
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
@@ -108,7 +108,7 @@ class ViewletTest(TestCase):
         if django.VERSION[:2] < (1, 8):
             get_template = get_template_from_string
         else:
-            get_template = Engine().from_string
+            get_template = engines['django'].from_string
 
         return get_template(source).render(Context(context or {})).strip()
 
