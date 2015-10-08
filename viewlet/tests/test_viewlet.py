@@ -200,6 +200,9 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
+        # Coffin does not support django > 1.7
+        if django.VERSION > (1, 7):
+            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
