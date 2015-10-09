@@ -3,11 +3,15 @@ from __future__ import unicode_literals
 import imp
 import six
 from time import time, sleep
+import django
 import django.conf
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.template import TemplateSyntaxError
-from django.template.loader import get_template_from_string
+if django.VERSION[:2] < (1, 8):
+    from django.template.loader import get_template_from_string
+else:
+    from django.template import engines
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
@@ -101,7 +105,12 @@ class ViewletTest(TestCase):
         return get_env().from_string(source)
 
     def render(self, source, context=None):
-        return get_template_from_string(source).render(Context(context or {})).strip()
+        if django.VERSION[:2] < (1, 8):
+            get_template = get_template_from_string
+        else:
+            get_template = engines['django'].from_string
+
+        return get_template(source).render(Context(context or {})).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')
@@ -191,6 +200,9 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
+        # Coffin does not support django > 1.7
+        if django.VERSION > (1, 7):
+            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
