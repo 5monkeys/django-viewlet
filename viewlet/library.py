@@ -34,9 +34,13 @@ class Library(dict):
         for app in settings.INSTALLED_APPS:
             try:
                 import_module('%s.views' % app)
+            except ImportError:
+                pass
+
+            try:
                 import_module('%s.viewlets' % app)
             except ImportError:
-                continue
+                pass
 
     def get(self, name):
         """
