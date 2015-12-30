@@ -20,10 +20,8 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-if django.VERSION >= (1, 7):
-    django.setup()
-
 cache = get_cache()
+
 __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
@@ -318,5 +316,5 @@ class ViewletCacheBackendTest(TestCase):
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is not None)
-        sleep(0.011)
+        sleep(v.cache.default_timeout)
         self.assertTrue(v.cache.get(cache_key) is None)
