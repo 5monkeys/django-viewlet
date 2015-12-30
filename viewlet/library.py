@@ -29,14 +29,18 @@ class Library(dict):
         Autodiscover decorated viewlets.
         Imports all views.py and viewlets.py to trigger the decorators.
         """
+        from importlib import import_module
         from django.conf import settings
-        from django.utils.importlib import import_module
         for app in settings.INSTALLED_APPS:
             try:
                 import_module('%s.views' % app)
+            except ImportError:
+                pass
+
+            try:
                 import_module('%s.viewlets' % app)
             except ImportError:
-                continue
+                pass
 
     def get(self, name):
         """
