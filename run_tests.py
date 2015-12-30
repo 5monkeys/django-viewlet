@@ -16,14 +16,13 @@ def main():
             'django.contrib.sites',
             'django.contrib.flatpages',
             'viewlet',
-            'viewlet.tests'
+            'viewlet.tests',
         ],
         'MIDDLEWARE_CLASSES': [
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.middleware.common.CommonMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         ],
         'MEDIA_ROOT': '/tmp/viewlet/media',
         'STATIC_ROOT': '/tmp/viewlet/static',
