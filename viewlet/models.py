@@ -9,10 +9,7 @@ from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
-try:
-    from django.template.context import BaseContext
-except ImportError:
-    from django.template.context import Context as BaseContext  # Django < 1.2
+from django.template.context import BaseContext
 
 try:
     from django.utils.encoding import smart_text, smart_bytes

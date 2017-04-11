@@ -15,12 +15,8 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-from ..compat import Context as ComptContext
-
-if django.VERSION[:2] < (1, 8):
-    from django.template.loader import get_template_from_string
-else:
-    from django.template import engines
+from ..compat import Context
+from .compat import get_template_from_string
 
 cache = get_cache()
 
@@ -105,12 +101,7 @@ class ViewletTest(TestCase):
         return get_env().from_string(source)
 
     def render(self, source, context=None):
-        if django.VERSION[:2] < (1, 8):
-            get_template = get_template_from_string
-        else:
-            get_template = engines['django'].from_string
-
-        return get_template(source).render(ComptContext(context or {})).strip()
+        return get_template_from_string(source).render(Context(context or {})).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')

@@ -14,6 +14,5 @@ def get_cache(alias=None):
             c = cache.get_cache(key)
     except (cache.InvalidCacheBackendError, ValueError):
         c = cache.cache
-    if not hasattr(c, 'clear'):  # Django < 1.2
-        c.clear = c._cache.clear
+
     return c
