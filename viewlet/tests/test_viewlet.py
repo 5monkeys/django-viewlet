@@ -6,12 +6,7 @@ from time import time, sleep
 import django
 import django.conf
 from django.core.urlresolvers import reverse
-from django.template import Context
 from django.template import TemplateSyntaxError
-if django.VERSION[:2] < (1, 8):
-    from django.template.loader import get_template_from_string
-else:
-    from django.template import engines
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
@@ -19,6 +14,13 @@ from ..cache import get_cache
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
+
+from ..compat import Context as ComptContext
+
+if django.VERSION[:2] < (1, 8):
+    from django.template.loader import get_template_from_string
+else:
+    from django.template import engines
 
 cache = get_cache()
 
@@ -108,7 +110,7 @@ class ViewletTest(TestCase):
         else:
             get_template = engines['django'].from_string
 
-        return get_template(source).render(Context(context or {})).strip()
+        return get_template(source).render(ComptContext(context or {})).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')

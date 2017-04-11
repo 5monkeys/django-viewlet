@@ -27,6 +27,7 @@ class ViewletExtension(Extension):
                 name = parser.parse_expression()
             first = False
         context = nodes.ContextReference()
+
         return nodes.CallBlock(
             self.call_method('_call_viewlet', args=[name, context, nodes.List(viewlet_args)]),
             [], [], []).set_lineno(lineno)

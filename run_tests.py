@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # coding=utf-8
 import sys
+import os
 
 import django
 from django.conf import settings
+
+ROOT = os.path.join(os.path.dirname(__file__), 'viewlet/tests')
 
 
 def main():
@@ -30,6 +33,28 @@ def main():
         'STATIC_URL': '/static/',
         'ROOT_URLCONF': 'viewlet.tests.urls',
         'SECRET_KEY': "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!",
+
+        'TEMPLATE_DEBUG': True,
+        'TEMPLATE_CONTEXT_PROCESSORS': [],
+        'TEMPLATE_DIRS': (os.path.join(ROOT, 'templates'),),
+
+        'TEMPLATES': [
+            {                
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'APP_DIRS': True,
+                'DIRS': (os.path.join(ROOT, 'templates'),),
+                'OPTIONS': {
+                    'debug': True,
+                    'context_processors': [
+                        'django.contrib.auth.context_processors.auth',
+                        'django.template.context_processors.request',
+                        'django.contrib.auth.context_processors.auth',
+                        'django.contrib.messages.context_processors.messages',
+                    ]
+                }
+            }
+        ],
+
         'JINJA2_ENVIRONMENT_OPTIONS': {
             'optimized': False  # Coffin config
         },
