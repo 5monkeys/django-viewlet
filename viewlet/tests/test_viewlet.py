@@ -3,11 +3,10 @@ from __future__ import unicode_literals
 import imp
 import six
 from time import time, sleep
+import django
 import django.conf
 from django.core.urlresolvers import reverse
-from django.template import Context
 from django.template import TemplateSyntaxError
-from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
@@ -16,10 +15,11 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-if django.VERSION >= (1, 7):
-    django.setup()
+from ..compat import Context
+from .compat import get_template_from_string
 
 cache = get_cache()
+
 __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
@@ -191,6 +191,9 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
+        # Coffin does not support django > 1.7
+        if django.VERSION > (1, 7):
+            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
@@ -306,5 +309,5 @@ class ViewletCacheBackendTest(TestCase):
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is not None)
-        sleep(0.011)
+        sleep(v.cache.default_timeout)
         self.assertTrue(v.cache.get(cache_key) is None)

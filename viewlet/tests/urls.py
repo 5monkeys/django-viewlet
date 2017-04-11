@@ -1,11 +1,14 @@
 # coding=utf-8
 from __future__ import unicode_literals
-try:
-    from django.conf.urls import patterns, include
-except ImportError:
-    from django.conf.urls.defaults import patterns, include
+import django
+from ..compat import urlpatterns
 
-urlpatterns = patterns(
-    '',
-    (r'^viewlet/', include('viewlet.urls')),
+if django.VERSION < (1, 6):
+    from django.conf.urls.defaults import url, include
+else:
+    from django.conf.urls import url, include
+
+
+urlpatterns = urlpatterns(
+    url(r'viewlet/', include('viewlet.urls'))
 )
