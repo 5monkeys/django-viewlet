@@ -58,7 +58,8 @@ matrix:
     - env: COVERAGE=true
 
 install:
-  - pip install --quiet --use-mirrors "Django>="$DJANGO",<"$DJANGO".99" flake8
+  - pip install --upgrade pip
+  - pip install --quiet  "Django>="$DJANGO",<"$DJANGO".99" flake8
   - make install
 
 script:
