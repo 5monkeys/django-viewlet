@@ -88,6 +88,12 @@ class ViewletTest(TestCase):
                 'greeting': greeting
             }
 
+        @viewlet(timeout=0)
+        def hello_render_to_string(context):
+            from django.template.loader import render_to_string
+            context['greeting'] = 'Hello'
+            return render_to_string('hello_request.html', context)
+
     def tearDown(self):
         jinja2_loader._env = None
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'viewlet.loaders.jinja2_loader.create_env'
@@ -100,8 +106,14 @@ class ViewletTest(TestCase):
         settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
         return get_env().from_string(source)
 
-    def render(self, source, context=None):
-        return get_template_from_string(source).render(Context(context or {})).strip()
+    def render(self, source, context=None, request=None):
+        kwargs = {
+            'context': Context(context or {})
+        }
+        if django.VERSION >= (1, 8):
+            kwargs['request'] = request
+
+        return get_template_from_string(source).render(**kwargs).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')
@@ -257,6 +269,19 @@ class ViewletTest(TestCase):
         html = template.render({'request': {'user': 'nicolas cage'}})
         refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
+
+    def test_request_context(self):
+        template = self.get_django_template("""
+            <h1>{% viewlet hello_render_to_string %}</h1>
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+        """)
+
+        context = {'test': 'test'}
+        html = self.render(template, context=context, request='Request')
+        self.assertTrue(isinstance(html, six.text_type))
 
 
 class ViewletCacheBackendTest(TestCase):

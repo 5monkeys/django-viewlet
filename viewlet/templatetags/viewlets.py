@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import logging
 import re
 import six
-import django
+
 from django import template
 from django.template import TemplateSyntaxError
 import viewlet
@@ -23,16 +23,10 @@ class ViewletNode(template.Node):
         self.viewlet_kwargs = kwargs
 
     def render(self, context):
-        from django.template.context import BaseContext, ContextPopException
-        if django.VERSION >= (1, 11) and isinstance(context, BaseContext):
-            try:
-                context = dict(context.pop())
-            except ContextPopException:
-                context = {}
-
         try:
             args = [arg.resolve(context) for arg in self.viewlet_args]
             kwargs = dict((key, value.resolve(context)) for key, value in six.iteritems(self.viewlet_kwargs))
+            context = context.flatten() if hasattr(context, 'flatten') else context
             template = viewlet.call(self.viewlet_name, context, *args, **kwargs)
             return mark_safe(template)
         except UnknownViewlet as e:
