@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 import imp
+import logging
 import six
 from time import time, sleep
 import django
@@ -139,7 +140,9 @@ class ViewletTest(TestCase):
         html = self.render(template, {'viewlet_arg': u'wörld'})
         self.assertEqual(html.strip(), u'<h1>Hello wörld!\n</h1>')
         template = self.get_django_template("<h1>{% viewlet unknown_viewlet %}</h1>")
+        logging.disable(logging.ERROR)
         self.assertRaises(UnknownViewlet, self.render, template)
+        logging.disable(logging.NOTSET)
         template = self.get_django_template("<h1>{% viewlet hello_world name= %}</h1>")
         self.assertRaises(TemplateSyntaxError, self.render, template)
 

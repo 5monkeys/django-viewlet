@@ -50,11 +50,11 @@ class Library(dict):
         if name not in self.keys():
             self.autodiscover()
 
-        try:
-            return self[name]
-        except KeyError:
-            from viewlet.exceptions import UnknownViewlet
+        if name not in self:
+            from .exceptions import UnknownViewlet
             raise UnknownViewlet(u'Unknown viewlet "%s"' % name)
+
+        return self[name]
 
     def add(self, viewlet):
         """
@@ -69,7 +69,7 @@ class Library(dict):
         Handles both decorator pointer and caller (with or without arguments).
         Creates a Viewlet instance to wrap the decorated function with.
         """
-        from viewlet.models import Viewlet
+        from .models import Viewlet
 
         if isinstance(name, types.FunctionType):
             def declare(func):
