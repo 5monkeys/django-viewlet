@@ -19,10 +19,10 @@ env:
     - TOXENV=py27-django110
     - TOXENV=py27-django111
 
-    - TOXENV=py33-django15
-    - TOXENV=py33-django16
-    - TOXENV=py33-django17
-    - TOXENV=py33-django18
+    # - TOXENV=py33-django15
+    # - TOXENV=py33-django16
+    # - TOXENV=py33-django17
+    # - TOXENV=py33-django18
 
     - TOXENV=py34-django15
     - TOXENV=py34-django16
@@ -37,12 +37,21 @@ env:
     - TOXENV=py35-django110
     - TOXENV=py35-django111
 
+
 matrix:
   include:
     - python: 3.6
       env: TOXENV=py36-django110
     - python: 3.6
       env: TOXENV=py36-django111
+    - python: 3.3
+      env: TOXENV=py33-django15
+    - python: 3.3
+      env: TOXENV=py33-django16
+    - python: 3.3
+      env: TOXENV=py33-django17
+    - python: 3.3
+      env: TOXENV=py33-django18      
     - python: 3.4  # i.e. skip installing 3.5
       env: TOXENV=lint
     - python: 3.4
