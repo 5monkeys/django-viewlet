@@ -19,8 +19,6 @@ env:
     - TOXENV=py27-django110
     - TOXENV=py27-django111
 
-    - TOXENV=py34-django15
-    - TOXENV=py34-django16
     - TOXENV=py34-django17
     - TOXENV=py34-django18
     - TOXENV=py34-django19
@@ -37,8 +35,6 @@ env:
 
 matrix:
   include:
-    - python: 3.6
-      env: TOXENV=py36-django110
     - python: 3.6
       env: TOXENV=py36-django111
     - python: 3.6
