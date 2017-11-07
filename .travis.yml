@@ -54,11 +54,13 @@ install:
   - make install
 
 script:
-  - if [[ $TOXENV =~ coverage ]]; then
+  - if [[ $TOXENV =~ coverage ]] && [ -n "$STASH_SECRET" ]; then
     stash pull $STASH_BOX -wc $(TOXENV= tox -l | wc -l);
     fi
-  - tox
-  - if [[ $TOXENV =~ py ]]; then
+  - if [[ ! $TOXENV =~ coverage ]] || [ -n "$STASH_SECRET" ]; then
+    tox;
+    fi
+  - if [[ $TOXENV =~ py ]] && [ -n "$STASH_SECRET" ]; then
     stash push $STASH_BOX $(ls .coverage.*);
     fi
 
