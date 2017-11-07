@@ -1,11 +1,11 @@
 # coding=utf-8
 from __future__ import unicode_literals
 import imp
+import logging
 import six
 from time import time, sleep
 import django
 import django.conf
-from django.core.urlresolvers import reverse
 from django.template import TemplateSyntaxError
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
@@ -16,7 +16,7 @@ from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
 from ..compat import Context
-from .compat import get_template_from_string
+from .compat import get_template_from_string, reverse
 
 cache = get_cache()
 
@@ -140,7 +140,9 @@ class ViewletTest(TestCase):
         html = self.render(template, {'viewlet_arg': u'wörld'})
         self.assertEqual(html.strip(), u'<h1>Hello wörld!\n</h1>')
         template = self.get_django_template("<h1>{% viewlet unknown_viewlet %}</h1>")
+        logging.disable(logging.ERROR)
         self.assertRaises(UnknownViewlet, self.render, template)
+        logging.disable(logging.NOTSET)
         template = self.get_django_template("<h1>{% viewlet hello_world name= %}</h1>")
         self.assertRaises(TemplateSyntaxError, self.render, template)
 
