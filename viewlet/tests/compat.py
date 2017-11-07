@@ -9,6 +9,12 @@ else:
         return engines['django'].from_string(template_code)
 
 
+if django.VERSION < (2, 0):
+    from django.core.urlresolvers import reverse
+else:
+    from django.urls import reverse
+
+
 __all__ = [
-    'get_template_from_string'
+    'get_template_from_string', 'reverse',
 ]

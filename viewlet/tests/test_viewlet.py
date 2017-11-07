@@ -5,7 +5,6 @@ import six
 from time import time, sleep
 import django
 import django.conf
-from django.core.urlresolvers import reverse
 from django.template import TemplateSyntaxError
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
@@ -16,7 +15,7 @@ from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
 from ..compat import Context
-from .compat import get_template_from_string
+from .compat import get_template_from_string, reverse
 
 cache = get_cache()
 
