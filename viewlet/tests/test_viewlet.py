@@ -1,13 +1,12 @@
 # coding=utf-8
 from __future__ import unicode_literals
 import imp
+import logging
 import six
 from time import time, sleep
+import django
 import django.conf
-from django.core.urlresolvers import reverse
-from django.template import Context
 from django.template import TemplateSyntaxError
-from django.template.loader import get_template_from_string
 from django.test import TestCase, Client
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
 from ..exceptions import UnknownViewlet
@@ -16,10 +15,11 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-if django.VERSION >= (1, 7):
-    django.setup()
+from ..compat import Context
+from .compat import get_template_from_string, reverse
 
 cache = get_cache()
+
 __all__ = ['ViewletTest', 'ViewletCacheBackendTest']
 
 
@@ -88,6 +88,12 @@ class ViewletTest(TestCase):
                 'greeting': greeting
             }
 
+        @viewlet(timeout=0)
+        def hello_render_to_string(context):
+            from django.template.loader import render_to_string
+            context['greeting'] = 'Hello'
+            return render_to_string('hello_request.html', context)
+
     def tearDown(self):
         jinja2_loader._env = None
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'viewlet.loaders.jinja2_loader.create_env'
@@ -100,8 +106,14 @@ class ViewletTest(TestCase):
         settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
         return get_env().from_string(source)
 
-    def render(self, source, context=None):
-        return get_template_from_string(source).render(Context(context or {})).strip()
+    def render(self, source, context=None, request=None):
+        kwargs = {
+            'context': Context(context or {})
+        }
+        if django.VERSION >= (1, 8):
+            kwargs['request'] = request
+
+        return get_template_from_string(source).render(**kwargs).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, 'alpha', 1)), '1.2.3a1')
@@ -128,7 +140,9 @@ class ViewletTest(TestCase):
         html = self.render(template, {'viewlet_arg': u'wörld'})
         self.assertEqual(html.strip(), u'<h1>Hello wörld!\n</h1>')
         template = self.get_django_template("<h1>{% viewlet unknown_viewlet %}</h1>")
+        logging.disable(logging.ERROR)
         self.assertRaises(UnknownViewlet, self.render, template)
+        logging.disable(logging.NOTSET)
         template = self.get_django_template("<h1>{% viewlet hello_world name= %}</h1>")
         self.assertRaises(TemplateSyntaxError, self.render, template)
 
@@ -191,6 +205,9 @@ class ViewletTest(TestCase):
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
+        # Coffin does not support django > 1.7
+        if django.VERSION > (1, 7):
+            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
@@ -255,6 +272,19 @@ class ViewletTest(TestCase):
         refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
 
+    def test_request_context(self):
+        template = self.get_django_template("""
+            <h1>{% viewlet hello_render_to_string %}</h1>
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+            {% viewlet hello_render_to_string %}
+        """)
+
+        context = {'test': 'test'}
+        html = self.render(template, context=context, request='Request')
+        self.assertTrue(isinstance(html, six.text_type))
+
 
 class ViewletCacheBackendTest(TestCase):
 
@@ -306,5 +336,5 @@ class ViewletCacheBackendTest(TestCase):
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is not None)
-        sleep(0.011)
+        sleep(v.cache.default_timeout)
         self.assertTrue(v.cache.get(cache_key) is None)

@@ -1,53 +1,75 @@
 language: python
 
 python:
-  - 2.6
-  - 2.7
-  - 3.3
-  - 3.4
+ - 3.5
 
 env:
+  # NOTE: On Travis web page define private STASH_URL, STASH_TOKEN, STASH_SECRET.
+  global:
+    - STASH_BOX=$TRAVIS_REPO_SLUG:$TRAVIS_BUILD_NUMBER:$STASH_SECRET
   matrix:
-    - DJANGO=1.2
-    - DJANGO=1.3
-    - DJANGO=1.4
-    - DJANGO=1.5
-    - DJANGO=1.6
-    - DJANGO=1.7
+    - TOXENV=py27-django12
+    - TOXENV=py27-django13
+    - TOXENV=py27-django14
+    - TOXENV=py27-django15
+    - TOXENV=py27-django16
+    - TOXENV=py27-django17
+    - TOXENV=py27-django18
+    - TOXENV=py27-django19
+    - TOXENV=py27-django110
+    - TOXENV=py27-django111
+
+    - TOXENV=py34-django17
+    - TOXENV=py34-django18
+    - TOXENV=py34-django19
+    - TOXENV=py34-django110
+    - TOXENV=py34-django111
+    - TOXENV=py34-django20
+
+    - TOXENV=py35-django18
+    - TOXENV=py35-django19
+    - TOXENV=py35-django110
+    - TOXENV=py35-django111
+    - TOXENV=py35-django20
+
 
 matrix:
-  exclude:
-    - python: 2.6
-      env: DJANGO=1.7
-    - python: 3.3
-      env: DJANGO=1.2
-    - python: 3.3
-      env: DJANGO=1.3
-    - python: 3.3
-      env: DJANGO=1.4
-    - python: 3.4
-      env: DJANGO=1.2
-    - python: 3.4
-      env: DJANGO=1.3
-    - python: 3.4
-      env: DJANGO=1.4
   include:
-    - python: 2.7
-      env: DJANGO=1.6  COVERAGE=true
-  allow_failures:
-    - env: COVERAGE=true
+    - python: 3.6
+      env: TOXENV=py36-django111
+    - python: 3.6
+      env: TOXENV=py36-django20
+    - python: 3.3
+      env: TOXENV=py33-django15
+    - python: 3.3
+      env: TOXENV=py33-django16
+    - python: 3.3
+      env: TOXENV=py33-django17
+    - python: 3.3
+      env: TOXENV=py33-django18      
+    - python: 3.4  # i.e. skip installing 3.5
+      env: TOXENV=lint
+    - python: 3.4
+      env: TOXENV=coverage  # run it after tests to collect reports from other jobs
 
 install:
-  - pip install --quiet --use-mirrors "Django>="$DJANGO",<"$DJANGO".99" flake8
+  - pip install --upgrade pip
+  - pip install tox stasher
   - make install
 
 script:
-  - make flake8 test
+  - if [[ $TOXENV =~ coverage ]] && [ -n "$STASH_SECRET" ]; then
+    stash pull $STASH_BOX -wc $(TOXENV= tox -l | wc -l);
+    fi
+  - if [[ ! $TOXENV =~ coverage ]] || [ -n "$STASH_SECRET" ]; then
+    tox;
+    fi
+  - if [[ $TOXENV =~ py ]] && [ -n "$STASH_SECRET" ]; then
+    stash push $STASH_BOX $(ls .coverage.*);
+    fi
 
-after_script:
-  - if [ "$COVERAGE" == "true" ]; then
-    pip install --quiet --use-mirrors python-coveralls;
-    make coverage;
-    coverage report;
+after_success:
+  - if [[ $TOXENV =~ coverage ]]; then
+    pip install --quiet python-coveralls;
     coveralls --ignore-errors;
     fi

@@ -3,19 +3,18 @@ from __future__ import unicode_literals
 import six
 import warnings
 from inspect import getargspec
-try:
-    from django.template.context import BaseContext
-except ImportError:
-    from django.template.context import Context as BaseContext  # Django < 1.2
-try:
-    from django.utils.encoding import smart_text, smart_bytes
-except ImportError:
-    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
 
 from .cache import get_cache
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
+
+from django.template.context import BaseContext
+
+try:
+    from django.utils.encoding import smart_text, smart_bytes
+except ImportError:
+    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
 
 
 class Viewlet(object):
@@ -101,12 +100,13 @@ class Viewlet(object):
         # Render template for context viewlets
         if self.template:
             context = merged_args[0]
+
             if isinstance(context, BaseContext):
                 context.push()
             else:
                 context = dict(context)
-            context.update(output)
 
+            context.update(output)
             output = self.render(context)
 
             if isinstance(context, BaseContext):
