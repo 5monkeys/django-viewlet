@@ -5,16 +5,12 @@ import warnings
 from inspect import getargspec
 
 from .cache import get_cache
+from .compat import smart_text, smart_bytes
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
 from django.template.context import BaseContext
-
-try:
-    from django.utils.encoding import smart_text, smart_bytes
-except ImportError:
-    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
 
 
 class Viewlet(object):

@@ -1,7 +1,10 @@
+import sys
 import django
 
+PY3 = sys.version_info[0] == 3
 
-def urlpatterns(*urls):
+
+def patterns(*urls):
     if django.VERSION < (1, 10):
         if django.VERSION < (1, 6):
             from django.conf.urls.defaults import patterns
@@ -10,19 +13,35 @@ def urlpatterns(*urls):
 
         return patterns('', *urls)
 
-    # else
     return list(urls)
 
 
-def Context(context):
-    if django.VERSION >= (1, 8):
+if django.VERSION < (1, 6):
+    from django.conf.urls.defaults import url
+else:
+    from django.conf.urls import url
+
+
+if django.VERSION < (1, 8):
+    from django.template import Context
+else:
+    def Context(context):
         return context
 
-    from django.template import Context
-    return Context(context)
+
+if PY3:
+    from django.utils.encoding import smart_text, smart_bytes
+else:
+    from django.utils.encoding import (
+        smart_unicode as smart_text,
+        smart_str as smart_bytes
+    )
 
 
 __all__ = [
-    'urlpatterns',
+    'smart_text',
+    'smart_bytes',
+    'url',
+    'patterns',
     'Context'
 ]
