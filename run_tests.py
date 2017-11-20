@@ -34,7 +34,6 @@ def main():
         'ROOT_URLCONF': 'viewlet.tests.urls',
         'SECRET_KEY': "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!",
 
-        'TEMPLATE_DEBUG': True,
         'TEMPLATE_CONTEXT_PROCESSORS': [],
         'TEMPLATE_DIRS': (os.path.join(ROOT, 'templates'),),
 
