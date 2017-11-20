@@ -1,5 +1,3 @@
-# coding=utf-8
-
 .. image:: https://raw.github.com/5monkeys/django-viewlet/master/docs/django_viewlet.png
 
 Render template parts with extended cache control.
@@ -122,7 +120,7 @@ which alias should be used in settings:
         # ...
     }
 
-Additionally, you can override cache backend in viewlet decorator with ``using`` argument
+Additionally, you can override cache alias in viewlet decorator with ``using`` argument
 
 .. code-block:: python
 

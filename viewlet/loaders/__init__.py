@@ -23,8 +23,9 @@ def mark_safe(value):
 
 
 def querydict_to_kwargs(querydict):
-    if six.PY3:
-        make_key = lambda k: k
-    else:
-        make_key = lambda k: k.encode('utf-8')
+    def make_key(k):
+        if six.PY3:
+            return k
+        else:
+            return k.encode('utf-8')
     return dict((make_key(k), ','.join(querydict.getlist(k))) for k in querydict)

@@ -29,14 +29,18 @@ class Library(dict):
         Autodiscover decorated viewlets.
         Imports all views.py and viewlets.py to trigger the decorators.
         """
+        from importlib import import_module
         from django.conf import settings
-        from django.utils.importlib import import_module
         for app in settings.INSTALLED_APPS:
             try:
                 import_module('%s.views' % app)
+            except ImportError:
+                pass
+
+            try:
                 import_module('%s.viewlets' % app)
             except ImportError:
-                continue
+                pass
 
     def get(self, name):
         """
@@ -46,11 +50,11 @@ class Library(dict):
         if name not in self.keys():
             self.autodiscover()
 
-        try:
-            return self[name]
-        except KeyError:
-            from viewlet.exceptions import UnknownViewlet
+        if name not in self:
+            from .exceptions import UnknownViewlet
             raise UnknownViewlet(u'Unknown viewlet "%s"' % name)
+
+        return self[name]
 
     def add(self, viewlet):
         """
@@ -65,7 +69,7 @@ class Library(dict):
         Handles both decorator pointer and caller (with or without arguments).
         Creates a Viewlet instance to wrap the decorated function with.
         """
-        from viewlet.models import Viewlet
+        from .models import Viewlet
 
         if isinstance(name, types.FunctionType):
             def declare(func):

@@ -3,21 +3,15 @@ from __future__ import unicode_literals
 import six
 import warnings
 from inspect import getargspec
-from django.utils.importlib import import_module
-
-try:
-    from django.template.context import BaseContext
-except ImportError:
-    from django.template.context import Context as BaseContext  # Django < 1.2
-try:
-    from django.utils.encoding import smart_text, smart_bytes
-except ImportError:
-    from django.utils.encoding import smart_unicode as smart_text, smart_str as smart_bytes
+from importlib import import_module
 
 from .cache import get_cache
+from .compat import smart_text, smart_bytes
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
+
+from django.template.context import BaseContext
 
 
 def import_by_path(path):
@@ -119,12 +113,13 @@ class Viewlet(object):
         # Render template for context viewlets
         if self.template:
             context = merged_args[0]
+
             if isinstance(context, BaseContext):
                 context.push()
             else:
                 context = dict(context)
-            context.update(output)
 
+            context.update(output)
             output = self.render(context)
 
             if isinstance(context, BaseContext):
