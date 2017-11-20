@@ -17,4 +17,6 @@ def viewlet_view(request, name):
 
     kwargs.update(querydict_to_kwargs(request.GET))
     output = viewlet.call(name, context, **kwargs)
-    return HttpResponse(output)
+    resp = HttpResponse(output)
+    resp['X-Robots-Tag'] = 'noindex'
+    return resp
