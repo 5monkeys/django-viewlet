@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import imp
 import logging
+from unittest import skipIf
 import six
 from time import time, sleep
 import django
@@ -199,15 +200,12 @@ class ViewletTest(TestCase):
         html = template.render({'extra': u'Räksmörgås', 'viewlet_arg': u'wörld'})
         self.assertEqual(html.strip(), u'<h1>RäksmörgåsHello wörld!</h1>')
 
+    @skipIf(six.PY3, "TODO: coffin fails for Python 3.x?")
+    @skipIf(django.VERSION > (1, 7), "Coffin does not support django > 1.7?")
     def test_custom_jinja2_environment(self):
-        if six.PY3:  # TODO: coffin fails for Python 3.x
-            return
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
-        # Coffin does not support django > 1.7
-        if django.VERSION > (1, 7):
-            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
@@ -321,17 +319,15 @@ class ViewletCacheBackendTest(TestCase):
             imp.reload(m)
         self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
+    @skipIf(django.VERSION < (1, 3), "Django < 1.3")
     def test_cache_backend_from_settings(self):
-        if django.VERSION < (1, 3):
-            return
         v = get('hello_cached_timestamp_settings_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is None)
 
+    @skipIf(django.VERSION < (1, 3), "Django < 1.3")
     def test_cache_backend_from_argument(self):
-        if django.VERSION < (1, 3):
-            return
         v = get('hello_cached_timestamp_argument_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
