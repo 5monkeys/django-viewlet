@@ -1,5 +1,6 @@
 *.pyc
 *.egg
+*.eggs
 *.egg-info
 /build/
 /dist/
@@ -7,3 +8,4 @@
 .DS_Store
 .tox
 .coverage
+.coverage.*

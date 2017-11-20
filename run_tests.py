@@ -38,7 +38,7 @@ def main():
         'TEMPLATE_DIRS': (os.path.join(ROOT, 'templates'),),
 
         'TEMPLATES': [
-            {                
+            {
                 'BACKEND': 'django.template.backends.django.DjangoTemplates',
                 'APP_DIRS': True,
                 'DIRS': (os.path.join(ROOT, 'templates'),),
@@ -62,7 +62,17 @@ def main():
         }
     }
 
-    if django.VERSION[:2] >= (1, 3):
+    if django.VERSION >= (1, 10):
+        conf['MIDDLEWARE'] = conf.pop('MIDDLEWARE_CLASSES')
+
+    if django.VERSION < (1, 8):
+        conf.pop('TEMPLATES')
+    else:
+        conf.pop('TEMPLATE_DEBUG')
+        conf.pop('TEMPLATE_CONTEXT_PROCESSORS')
+        conf.pop('TEMPLATE_DIRS')
+
+    if django.VERSION >= (1, 3):
         conf.update(DATABASES={
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
