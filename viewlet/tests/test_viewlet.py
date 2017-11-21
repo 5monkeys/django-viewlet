@@ -89,6 +89,12 @@ class ViewletTest(TestCase):
                 'greeting': greeting
             }
 
+        @viewlet(template='hello_from_dir.html', timeout=0)
+        def hello_from_dir(context, greeting):
+            return {
+                'greeting': greeting
+            }
+
         @viewlet(timeout=0)
         def hello_render_to_string(context):
             from django.template.loader import render_to_string
@@ -269,6 +275,21 @@ class ViewletTest(TestCase):
         html = template.render({'request': {'user': 'nicolas cage'}})
         refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
+
+    def test_django_template_from_dir(self):
+        template = self.get_django_template(
+            "{% viewlet hello_from_dir 'nice to see you' %}")
+        req = {'user': 'castor troy'}
+        html = self.render(template, context={'request': req}, request=req)
+        self.assertTrue(isinstance(html, six.text_type))
+        self.assertEqual(html, 'nice to see you castor troy!')
+
+    def test_jinja_template_from_dir(self):
+        template = self.get_jinja_template(
+            "{% viewlet 'hello_from_dir', 'nice to see you' %}")
+        html = template.render({'request': {'user': 'nicolas cage'}})
+        self.assertTrue(isinstance(html, six.text_type))
+        self.assertEqual(html, 'nice to see you nicolas cage!')
 
     def test_request_context(self):
         template = self.get_django_template("""

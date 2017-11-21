@@ -35,13 +35,13 @@ def main():
         'SECRET_KEY': "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!",
 
         'TEMPLATE_CONTEXT_PROCESSORS': [],
-        'TEMPLATE_DIRS': (os.path.join(ROOT, 'templates'),),
+        'TEMPLATE_DIRS': (os.path.join(ROOT, 'template_dir'),),
 
         'TEMPLATES': [
             {
                 'BACKEND': 'django.template.backends.django.DjangoTemplates',
                 'APP_DIRS': True,
-                'DIRS': (os.path.join(ROOT, 'templates'),),
+                'DIRS': (os.path.join(ROOT, 'template_dir'),),
                 'OPTIONS': {
                     'debug': True,
                     'context_processors': [
