@@ -2,6 +2,11 @@
 # coding=utf-8
 import sys
 import os
+import warnings
+
+# We do it first before Django loads, and then again in tests
+warnings.simplefilter('error')
+warnings.filterwarnings('ignore', module='cgi')
 
 import django
 from django.conf import settings
