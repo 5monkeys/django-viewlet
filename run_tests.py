@@ -59,6 +59,21 @@ def main():
                 }
             }
         ],
+        'JINJA2_TEMPLATES': [
+            {
+                'BACKEND': 'django.template.backends.jinja2.Jinja2',
+                'APP_DIRS': True,
+                'DIRS': (
+                    os.path.join(ROOT, 'template_dir'),
+                    os.path.join(ROOT, 'templates'),  # or change app_dirname
+                ),
+                'OPTIONS': {
+                    'extensions': [
+                        'viewlet.loaders.jinja2_loader.ViewletExtension',
+                    ],
+                }
+            }
+        ],
 
         'JINJA2_ENVIRONMENT_OPTIONS': {
             'optimized': False  # Coffin config
