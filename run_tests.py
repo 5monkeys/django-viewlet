@@ -21,6 +21,7 @@ def main():
         'INSTALLED_APPS': [
             'django.contrib.auth',
             'django.contrib.contenttypes',
+            'django.contrib.sessions',
             'django.contrib.sites',
             'django.contrib.flatpages',
             'viewlet',
@@ -77,7 +78,7 @@ def main():
         conf.pop('TEMPLATE_CONTEXT_PROCESSORS')
         conf.pop('TEMPLATE_DIRS')
 
-    if django.VERSION >= (1, 3):
+    if django.VERSION >= (1, 2):
         conf.update(DATABASES={
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',

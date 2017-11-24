@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import imp
 import logging
-from unittest import skipIf
 import six
 from time import time, sleep
 import django
@@ -16,8 +15,9 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-from ..compat import Context
-from .compat import get_template_from_string, reverse
+from ..compat import Context, PY3
+from .compat import get_template_from_string, reverse, override_settings, \
+    skipIf
 
 cache = get_cache()
 
@@ -38,7 +38,7 @@ class ViewletTest(TestCase):
         def hello_name(context, name=u"wurld"):
             return u'Hello %s' % name
 
-        @viewlet(template='hello_world.html', cached=False)
+        @viewlet(template='hello_world.html', timeout=0)
         def hello_nocache(context, name="wurld"):
             return {'name': name}
 
@@ -70,7 +70,7 @@ class ViewletTest(TestCase):
                 'timestamp': time(),
             }
 
-        @viewlet(template='hello_timestamp.html', cached=False)
+        @viewlet(template='hello_timestamp.html', timeout=0)
         def hello_non_cached_timestamp(context, name):
             return {
                 'name': name,
@@ -171,13 +171,13 @@ class ViewletTest(TestCase):
         html1 = call('hello_cache', None, 'world')
         sleep(0.01)
         html2 = call('hello_cache', None, 'world')
-        self.assertEquals(html1, html2)
+        self.assertEqual(html1, html2)
 
     def test_unicode_cache(self):
         html1 = call('hello_cache', None, u'wörld')
         sleep(0.01)
         html2 = call('hello_cache', None, u'wörld')
-        self.assertEquals(html1, html2)
+        self.assertEqual(html1, html2)
 
     def test_refresh(self):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
