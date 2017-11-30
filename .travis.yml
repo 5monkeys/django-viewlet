@@ -33,12 +33,6 @@ env:
 
 matrix:
   include:
-    # - python: 2.5
-    #   env: TOXENV=py25-django12
-    # - python: 2.5
-    #   env: TOXENV=py25-django13
-    # - python: 2.5
-    #   env: TOXENV=py25-django14
     - python: 2.6
       env: TOXENV=py26-django13
     - python: 2.6
