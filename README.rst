@@ -69,6 +69,26 @@ and optionally switch to their respective environment.
 
     VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
 
+**Django 1.8+:**
+
+Add ``ViewletExtension`` to the list of extensions of Jinja2 template engine
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.jinja2.Jinja2',
+            # ...
+            'OPTIONS': {
+                # ...
+                'extensions': [
+                    # ...
+                    'viewlet.loaders.jinja2_loader.ViewletExtension',
+                ],
+            }
+        }
+    ],
+
 
 Usage
 -----
