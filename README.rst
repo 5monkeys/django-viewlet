@@ -2,11 +2,18 @@
 
 Render template parts with extended cache control.
 
-.. image:: https://travis-ci.org/5monkeys/django-viewlet.png?branch=master
+.. image:: https://travis-ci.org/5monkeys/django-viewlet.svg?branch=master
     :target: http://travis-ci.org/5monkeys/django-viewlet
 
-.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.png?branch=master
+.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.svg?branch=master
     :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
+
+.. image:: https://img.shields.io/pypi/v/django-viewlet.svg
+    :target: https://pypi.python.org/pypi/django-viewlet/
+
+.. image:: https://img.shields.io/pypi/pyversions/django-viewlet.svg
+    :target: https://pypi.python.org/pypi/django-viewlet/
+
 
 Installation
 ------------
