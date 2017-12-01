@@ -1,4 +1,5 @@
-.. image:: https://raw.github.com/5monkeys/django-viewlet/master/docs/django_viewlet.png
+.. image:: https://rawgit.com/5monkeys/django-viewlet/master/docs/django_viewlet.svg
+    :width: 500px
 
 Render template parts with extended cache control.
 
