@@ -35,7 +35,8 @@ Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the templa
 Jinja2
 ______
 
-If you're using ``Jinja2`` as your template engine, put this in your Django settings.
+If you're using ``Jinja2`` as your template engine for Django versions < 1.8,
+put this in your Django settings:
 
 .. code-block:: python
 
