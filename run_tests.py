@@ -2,6 +2,11 @@
 # coding=utf-8
 import sys
 import os
+import warnings
+
+# We do it first before Django loads, and then again in tests
+warnings.simplefilter('error')
+warnings.filterwarnings('ignore', module='cgi')
 
 import django
 from django.conf import settings
@@ -16,6 +21,7 @@ def main():
         'INSTALLED_APPS': [
             'django.contrib.auth',
             'django.contrib.contenttypes',
+            'django.contrib.sessions',
             'django.contrib.sites',
             'django.contrib.flatpages',
             'viewlet',
@@ -35,13 +41,13 @@ def main():
         'SECRET_KEY': "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!",
 
         'TEMPLATE_CONTEXT_PROCESSORS': [],
-        'TEMPLATE_DIRS': (os.path.join(ROOT, 'templates'),),
+        'TEMPLATE_DIRS': (os.path.join(ROOT, 'template_dir'),),
 
         'TEMPLATES': [
-            {                
+            {
                 'BACKEND': 'django.template.backends.django.DjangoTemplates',
                 'APP_DIRS': True,
-                'DIRS': (os.path.join(ROOT, 'templates'),),
+                'DIRS': (os.path.join(ROOT, 'template_dir'),),
                 'OPTIONS': {
                     'debug': True,
                     'context_processors': [
@@ -50,6 +56,21 @@ def main():
                         'django.contrib.auth.context_processors.auth',
                         'django.contrib.messages.context_processors.messages',
                     ]
+                }
+            }
+        ],
+        'JINJA2_TEMPLATES': [
+            {
+                'BACKEND': 'django.template.backends.jinja2.Jinja2',
+                'APP_DIRS': True,
+                'DIRS': (
+                    os.path.join(ROOT, 'template_dir'),
+                    os.path.join(ROOT, 'templates'),  # or change app_dirname
+                ),
+                'OPTIONS': {
+                    'extensions': [
+                        'viewlet.loaders.jinja2_loader.ViewletExtension',
+                    ],
                 }
             }
         ],
@@ -62,7 +83,17 @@ def main():
         }
     }
 
-    if django.VERSION[:2] >= (1, 3):
+    if django.VERSION >= (1, 10):
+        conf['MIDDLEWARE'] = conf.pop('MIDDLEWARE_CLASSES')
+
+    if django.VERSION < (1, 8):
+        conf.pop('TEMPLATES')
+    else:
+        conf.pop('TEMPLATE_DEBUG')
+        conf.pop('TEMPLATE_CONTEXT_PROCESSORS')
+        conf.pop('TEMPLATE_DIRS')
+
+    if django.VERSION >= (1, 2):
         conf.update(DATABASES={
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',

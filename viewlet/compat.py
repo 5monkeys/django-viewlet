@@ -1,3 +1,4 @@
+import inspect
 import sys
 import django
 
@@ -5,8 +6,8 @@ PY3 = sys.version_info[0] == 3
 
 
 def patterns(*urls):
-    if django.VERSION < (1, 10):
-        if django.VERSION < (1, 6):
+    if django.VERSION < (1, 8):
+        if django.VERSION < (1, 4):
             from django.conf.urls.defaults import patterns
         else:
             from django.conf.urls import patterns
@@ -16,10 +17,10 @@ def patterns(*urls):
     return list(urls)
 
 
-if django.VERSION < (1, 6):
-    from django.conf.urls.defaults import url
+if django.VERSION < (1, 4):
+    from django.conf.urls.defaults import url, include
 else:
-    from django.conf.urls import url
+    from django.conf.urls import url, include
 
 
 if django.VERSION < (1, 8):
@@ -38,10 +39,30 @@ else:
     )
 
 
+def get_func_args(func):
+    if PY3:
+        return list(inspect.signature(func).parameters.keys())
+    return inspect.getargspec(func).args
+
+
+def import_module(name):
+    if sys.version_info < (2, 7):
+        if django.VERSION < (1, 7):
+            from django.utils.importlib import import_module
+            return import_module(name)
+        __import__(name)
+        return sys.modules[name]
+    from importlib import import_module
+    return import_module(name)
+
+
 __all__ = [
     'smart_text',
     'smart_bytes',
+    'get_func_args',
+    'import_module',
     'url',
     'patterns',
+    'include',
     'Context'
 ]

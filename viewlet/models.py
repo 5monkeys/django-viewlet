@@ -2,10 +2,9 @@
 from __future__ import unicode_literals
 import six
 import warnings
-from inspect import getargspec
 
 from .cache import get_cache
-from .compat import smart_text, smart_bytes
+from .compat import smart_text, smart_bytes, get_func_args
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
@@ -45,7 +44,7 @@ class Viewlet(object):
         function as the actual wrapper
         """
         self.viewlet_func = func
-        self.viewlet_func_args = getargspec(func).args
+        self.viewlet_func_args = get_func_args(func)
 
         if not self.name:
             self.name = getattr(func, 'func_name', getattr(func, '__name__'))

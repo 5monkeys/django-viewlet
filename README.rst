@@ -17,7 +17,7 @@ Install django-viewlet in your python environment
 
     $ pip install django-viewlet
 
-Supports ``Django`` versions 1.2 - 1.7 and ``Python`` versions 2.6 - 3.4.
+Supports ``Django`` versions 1.3 - 2.0 and ``Python`` versions 2.6 - 3.6.
 
 
 Configuration

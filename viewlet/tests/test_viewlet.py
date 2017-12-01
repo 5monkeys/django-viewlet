@@ -15,8 +15,9 @@ from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
 
-from ..compat import Context
-from .compat import get_template_from_string, reverse
+from ..compat import Context, PY3
+from .compat import get_template_from_string, reverse, override_settings, \
+    skipIf
 
 cache = get_cache()
 
@@ -37,7 +38,7 @@ class ViewletTest(TestCase):
         def hello_name(context, name=u"wurld"):
             return u'Hello %s' % name
 
-        @viewlet(template='hello_world.html', cached=False)
+        @viewlet(template='hello_world.html', timeout=0)
         def hello_nocache(context, name="wurld"):
             return {'name': name}
 
@@ -69,7 +70,7 @@ class ViewletTest(TestCase):
                 'timestamp': time(),
             }
 
-        @viewlet(template='hello_timestamp.html', cached=False)
+        @viewlet(template='hello_timestamp.html', timeout=0)
         def hello_non_cached_timestamp(context, name):
             return {
                 'name': name,
@@ -88,11 +89,19 @@ class ViewletTest(TestCase):
                 'greeting': greeting
             }
 
+        @viewlet(template='hello_from_dir.html', timeout=0)
+        def hello_from_dir(context, greeting):
+            return {
+                'greeting': greeting
+            }
+
         @viewlet(timeout=0)
         def hello_render_to_string(context):
             from django.template.loader import render_to_string
             context['greeting'] = 'Hello'
             return render_to_string('hello_request.html', context)
+
+        self.tail = '' if django.VERSION < (1, 8) else '\n'
 
     def tearDown(self):
         jinja2_loader._env = None
@@ -103,8 +112,14 @@ class ViewletTest(TestCase):
                           source))
 
     def get_jinja_template(self, source):
-        settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
-        return get_env().from_string(source)
+        if django.VERSION < (1, 8):
+            settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
+            return get_env().from_string(source)
+
+        with override_settings(
+                TEMPLATES=django.conf.settings.JINJA2_TEMPLATES):
+            from django.template import engines
+            return engines['jinja2'].from_string(source)
 
     def render(self, source, context=None, request=None):
         kwargs = {
@@ -164,13 +179,13 @@ class ViewletTest(TestCase):
         html1 = call('hello_cache', None, 'world')
         sleep(0.01)
         html2 = call('hello_cache', None, 'world')
-        self.assertEquals(html1, html2)
+        self.assertEqual(html1, html2)
 
     def test_unicode_cache(self):
         html1 = call('hello_cache', None, u'wörld')
         sleep(0.01)
         html2 = call('hello_cache', None, u'wörld')
-        self.assertEquals(html1, html2)
+        self.assertEqual(html1, html2)
 
     def test_refresh(self):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
@@ -197,17 +212,14 @@ class ViewletTest(TestCase):
     def test_jinja_tag(self):
         template = self.get_jinja_template(u"<h1>{% viewlet 'hello_nocache', viewlet_arg %}</h1>")
         html = template.render({'extra': u'Räksmörgås', 'viewlet_arg': u'wörld'})
-        self.assertEqual(html.strip(), u'<h1>RäksmörgåsHello wörld!</h1>')
+        self.assertEqual(html.strip(), u'<h1>RäksmörgåsHello wörld!%s</h1>' % self.tail)
 
+    @skipIf(six.PY3, "TODO: coffin fails for Python 3.x?")
+    @skipIf(django.VERSION > (1, 7), "Coffin does not support django > 1.7?")
     def test_custom_jinja2_environment(self):
-        if six.PY3:  # TODO: coffin fails for Python 3.x
-            return
         env = get_env()
         self.assertEqual(env.optimized, True)
         self.assertEqual(env.autoescape, False)
-        # Coffin does not support django > 1.7
-        if django.VERSION > (1, 7):
-            return
         settings.VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
         jinja2_loader._env = None
         env = get_env()
@@ -250,7 +262,7 @@ class ViewletTest(TestCase):
         # Test jinja2
         template = self.get_jinja_template(u"<h1>{% viewlet 'hello_strong', 'wörld' %}</h1>")
         html = template.render()
-        self.assertEqual(html, u'<h1>Hello <strong>wörld!</strong></h1>')
+        self.assertEqual(html, u'<h1>Hello <strong>wörld!</strong>%s</h1>' % self.tail)
 
     def test_cached_string(self):
         template = self.get_django_template("<h1>{% viewlet hello_name name='wörld' %}</h1>")
@@ -271,6 +283,30 @@ class ViewletTest(TestCase):
         html = template.render({'request': {'user': 'nicolas cage'}})
         refresh('hello_request', 'nice to see you')
         self.assertNotEqual(template.render({'request': {'user': 'castor troy'}}), html)
+
+    def test_django_template_from_dir(self):
+        template = self.get_django_template(
+            "{% viewlet hello_from_dir 'nice to see you' %}")
+        req = {'user': 'castor troy'}
+        html = self.render(template, context={'request': req}, request=req)
+        self.assertTrue(isinstance(html, six.text_type))
+        self.assertEqual(html, 'nice to see you castor troy!')
+
+    def test_jinja_template_from_dir(self):
+        template = self.get_jinja_template(
+            "{% viewlet 'hello_from_dir', 'nice to see you' %}")
+        html = template.render({'request': {'user': 'nicolas cage'}})
+        self.assertTrue(isinstance(html, six.text_type))
+        self.assertEqual(html, 'nice to see you nicolas cage!')
+
+    @skipIf(django.VERSION < (1, 8), "Django < 1.8")
+    def test_jinja_template_from_dir_warning(self):
+        settings.VIEWLET_TEMPLATE_ENGINE = 'jinja2'
+        template = self.get_jinja_template("{% viewlet 'hello_from_dir' %}")
+        func = self.assertRaisesRegex \
+            if PY3 else self.assertRaisesRegexp
+        with func(DeprecationWarning, '^VIEWLET_TEMPLATE_ENGINE .*'):
+            template.render()
 
     def test_request_context(self):
         template = self.get_django_template("""
@@ -321,17 +357,15 @@ class ViewletCacheBackendTest(TestCase):
             imp.reload(m)
         self.assertNotEqual('dummy', conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
 
+    @skipIf(django.VERSION < (1, 3), "Django < 1.3")
     def test_cache_backend_from_settings(self):
-        if django.VERSION < (1, 3):
-            return
         v = get('hello_cached_timestamp_settings_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
         self.assertTrue(v.cache.get(cache_key) is None)
 
+    @skipIf(django.VERSION < (1, 3), "Django < 1.3")
     def test_cache_backend_from_argument(self):
-        if django.VERSION < (1, 3):
-            return
         v = get('hello_cached_timestamp_argument_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
