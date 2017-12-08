@@ -4,7 +4,7 @@
 Render template parts with extended cache control.
 
 .. image:: https://travis-ci.org/5monkeys/django-viewlet.svg?branch=master
-    :target: http://travis-ci.org/5monkeys/django-viewlet
+    :target: https://travis-ci.org/5monkeys/django-viewlet
 
 .. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.svg?branch=master
     :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
