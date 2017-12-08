@@ -43,7 +43,7 @@ setup(
     long_description=readme,
     author="Jonas Lundberg",
     author_email="jonas@5monkeys.se",
-    url="http://github.com/5monkeys/django-viewlet",
+    url="https://github.com/5monkeys/django-viewlet",
     download_url="https://github.com/5monkeys/django-viewlet/tarball/%s" % (version,),
     keywords=["django", "template", "cache", "view", "subview", "decorator", "refresh", "invalidate"],
     platforms=["any"],
