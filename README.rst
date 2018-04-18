@@ -1,12 +1,20 @@
-.. image:: https://raw.github.com/5monkeys/django-viewlet/master/docs/django_viewlet.png
+.. image:: https://www.5monkeys.se/img/django-viewlet.svg
+    :width: 500px
 
 Render template parts with extended cache control.
 
-.. image:: https://travis-ci.org/5monkeys/django-viewlet.png?branch=master
-    :target: http://travis-ci.org/5monkeys/django-viewlet
+.. image:: https://travis-ci.org/5monkeys/django-viewlet.svg?branch=master
+    :target: https://travis-ci.org/5monkeys/django-viewlet
 
-.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.png?branch=master
+.. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.svg?branch=master
     :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
+
+.. image:: https://img.shields.io/pypi/v/django-viewlet.svg
+    :target: https://pypi.python.org/pypi/django-viewlet/
+
+.. image:: https://img.shields.io/pypi/pyversions/django-viewlet.svg
+    :target: https://pypi.python.org/pypi/django-viewlet/
+
 
 Installation
 ------------
@@ -17,7 +25,7 @@ Install django-viewlet in your python environment
 
     $ pip install django-viewlet
 
-Supports ``Django`` versions 1.2 - 1.7 and ``Python`` versions 2.6 - 3.4.
+Supports ``Django`` versions 1.3 - 2.0 and ``Python`` versions 2.6 - 3.6.
 
 
 Configuration
@@ -35,7 +43,8 @@ Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the templa
 Jinja2
 ______
 
-If you're using ``Jinja2`` as your template engine, put this in your Django settings.
+If you're using ``Jinja2`` as your template engine for Django versions < 1.8,
+put this in your Django settings:
 
 .. code-block:: python
 
@@ -68,6 +77,26 @@ and optionally switch to their respective environment.
     }
 
     VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
+
+**Django 1.8+:**
+
+Add ``ViewletExtension`` to the list of extensions of Jinja2 template engine
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.jinja2.Jinja2',
+            # ...
+            'OPTIONS': {
+                # ...
+                'extensions': [
+                    # ...
+                    'viewlet.loaders.jinja2_loader.ViewletExtension',
+                ],
+            }
+        }
+    ],
 
 
 Usage

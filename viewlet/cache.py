@@ -10,7 +10,7 @@ def get_cache(alias=None):
     from django.core import cache
     try:
         key = alias or settings.VIEWLET_DEFAULT_CACHE_ALIAS
-        if django.VERSION > (1, 8):
+        if django.VERSION >= (1, 7):
             c = cache.caches[key]
         else:
             c = cache.get_cache(key)
