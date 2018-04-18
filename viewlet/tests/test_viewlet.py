@@ -1,16 +1,21 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 import imp
 import logging
 import six
 from time import time, sleep
+
 import django
 import django.conf
+from django.core.handlers.wsgi import WSGIRequest
 from django.template import TemplateSyntaxError
 from django.test import TestCase, Client
+from django.utils.encoding import smart_text
+
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models, exceptions
 from ..exceptions import UnknownViewlet
-from ..cache import get_cache, make_key_args_join
+from ..cache import get_cache, make_key_args_join, digest_args
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
@@ -87,6 +92,13 @@ class ViewletTest(TestCase):
         def hello_request(context, greeting):
             return {
                 'greeting': greeting
+            }
+
+        @viewlet(template='hello_request.html', timeout=0)
+        def hello_request_context(context, greeting, request):
+            return {
+                'greeting': greeting,
+                'request': request,
             }
 
         @viewlet(template='hello_from_dir.html', timeout=0)
@@ -208,6 +220,14 @@ class ViewletTest(TestCase):
         self.assertEqual(response.status_code, 200)
         html = call('hello_cache', None, u'wörld')
         self.assertEqual(response.content.decode('utf-8'), html)
+
+    def test_view_request(self):
+        client = Client()
+        url = reverse('viewlet', args=['hello_request_context'])
+        response = client.get(url, {'greeting': u'wörld'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(smart_text(response.content),
+                         u'wörld AnonymousUser!')
 
     def test_jinja_tag(self):
         template = self.get_jinja_template(u"<h1>{% viewlet 'hello_nocache', viewlet_arg %}</h1>")
@@ -393,9 +413,31 @@ class ViewletKeyTest(TestCase):
         def custom_key_old_format(context, greet, name):
             return u'%s %s!' % (greet, name)
 
+        @viewlet(timeout=1)
+        def with_request(context, request):
+            return u'hello'
+
     def test_custom_key_without_args(self):
         v = get('custom_key_without_args')
         self.assertEqual(v._build_cache_key(), 'somekey')
+
+    def test_with_request(self):
+        v = get('with_request')
+        request = WSGIRequest(environ={
+            'REQUEST_METHOD': 'get', 'wsgi.input': '', 'PATH_INFO': '',
+        })
+        self.assertEqual(
+            v._build_cache_key(request),
+            'viewlet:with_request:' + digest_args([]),
+        )
+        self.assertEqual(
+            v._build_cache_key(request, 'hej'),
+            'viewlet:with_request:' + digest_args(['hej']),
+        )
+        self.assertEqual(
+            v._build_cache_key('hej', request),
+            'viewlet:with_request:' + digest_args(['hej']),
+        )
 
     def test_custom_key_missing_args(self):
         v = get('custom_key_missing_args')

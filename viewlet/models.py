@@ -9,6 +9,7 @@ from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
+from django.core.handlers.wsgi import WSGIRequest
 from django.template.context import BaseContext
 
 
@@ -77,13 +78,15 @@ class Viewlet(object):
         Build cache key based on viewlet argument except initial context argument.
         """
         key = self.key
+        args = [a for a in args if not isinstance(a, WSGIRequest)]
         if key and callable(key):
             key = key(self, args)
         else:
             key = default_key_func(self, args)
         max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
         assert len(key) <= max_len, \
-            u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(key=key, max_len=max_len)
+            u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
+                key=key, max_len=max_len)
         return key
 
     def _cache_get(self, key):

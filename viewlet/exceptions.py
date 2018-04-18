@@ -3,12 +3,12 @@ from django.template import TemplateSyntaxError
 
 
 DEPRECATED_KEY_FORMAT_MESSAGE = \
-    u"Key argument format has been changed. It can be a function or a string containing `{args}`"
-
+    u"Key argument format has been changed. It can be a function or " \
+    u"a string containing `{args}`"
 
 WRONG_KEY_FORMAT_MESSAGE = \
-    u"If you want to use your custom key for a viewlet which has arguments, please add `{args}` to the key " \
-    u"where the arguments will be inserted."
+    u"If you want to use your custom key for a viewlet which has arguments, " \
+    u"please add `{args}` to the key where the arguments will be inserted."
 
 
 class ViewletException(Exception):
