@@ -8,7 +8,6 @@ from time import time, sleep
 
 import django
 import django.conf
-from django.core.handlers.wsgi import WSGIRequest
 from django.template import TemplateSyntaxError
 from django.test import TestCase, Client
 
@@ -91,13 +90,6 @@ class ViewletTest(TestCase):
         def hello_request(context, greeting):
             return {
                 'greeting': greeting
-            }
-
-        @viewlet(template='hello_request.html', timeout=0)
-        def hello_request_context(context, greeting, request):
-            return {
-                'greeting': greeting,
-                'request': context.get('request', request),
             }
 
         @viewlet(template='hello_from_dir.html', timeout=0)
@@ -230,7 +222,7 @@ class ViewletTest(TestCase):
 
     def test_view_request(self):
         client = Client()
-        url = reverse('viewlet', args=['hello_request_context'])
+        url = reverse('viewlet', args=['hello_request'])
         response = client.get(url, {'greeting': u'wörld'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, u'wörld AnonymousUser!')
@@ -419,31 +411,9 @@ class ViewletKeyTest(TestCase):
         def custom_key_old_format(context, greet, name):
             return u'%s %s!' % (greet, name)
 
-        @viewlet(timeout=1)
-        def with_request(context, request):
-            return u'hello'
-
     def test_custom_key_without_args(self):
         v = get('custom_key_without_args')
         self.assertEqual(v._build_cache_key(), 'somekey')
-
-    def test_with_request(self):
-        v = get('with_request')
-        request = WSGIRequest(environ={
-            'REQUEST_METHOD': 'get', 'wsgi.input': '', 'PATH_INFO': '',
-        })
-        self.assertEqual(
-            v._build_cache_key(request),
-            'viewlet:with_request:' + digest_args([]),
-        )
-        self.assertEqual(
-            v._build_cache_key(request, 'hej'),
-            'viewlet:with_request:' + digest_args(['hej']),
-        )
-        self.assertEqual(
-            v._build_cache_key('hej', request),
-            'viewlet:with_request:' + digest_args(['hej']),
-        )
 
     def test_custom_key_missing_args(self):
         v = get('custom_key_missing_args')

@@ -9,7 +9,7 @@ from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
-from django.core.handlers.wsgi import WSGIRequest
+import django
 from django.template.context import BaseContext
 
 
@@ -79,7 +79,6 @@ class Viewlet(object):
         Build cache key based on viewlet argument except initial context argument.
         """
         key = self.key
-        args = [a for a in args if not isinstance(a, WSGIRequest)]
         if key and callable(key):
             key = key(self, args)
         else:
@@ -109,6 +108,7 @@ class Viewlet(object):
         The actual wrapper around the decorated viewlet function.
         """
         refresh = kwargs.pop('refresh', False)
+        request = kwargs.pop('request', None)
         merged_args = self._build_args(*args, **kwargs)
         output = self._call(merged_args, refresh)
 
@@ -122,7 +122,11 @@ class Viewlet(object):
                 context = dict(context)
 
             context.update(output)
-            output = self.render(context)
+            if django.VERSION >= (1, 8):
+                kw = {'request': request}
+            else:
+                kw = {}
+            output = self.render(context, **kw)
 
             if isinstance(context, BaseContext):
                 context.pop()
@@ -155,12 +159,12 @@ class Viewlet(object):
     def is_using_cache(self):
         return self.timeout != 0
 
-    def render(self, context):
+    def render(self, context, **kwargs):
         """
         Renders the viewlet template.
         The render import is based on settings.VIEWLET_TEMPLATE_ENGINE (default django).
         """
-        return render(self.template, context)
+        return render(self.template, context, **kwargs)
 
     def refresh(self, *args):
         """
