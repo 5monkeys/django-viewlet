@@ -212,6 +212,7 @@ class ViewletTest(TestCase):
         html3 = self.render(template)
         self.assertNotEqual(html3, html2)
 
+        sleep(0.01)
         html4 = self.render(template)
         self.assertEqual(html3, html4)
 

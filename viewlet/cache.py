@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 import hashlib
+from .compat import smart_text
 from .conf import settings
 from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
 
@@ -21,7 +22,7 @@ def get_cache(alias=None):
 
 
 def join_args(args):
-    return u':'.join(map(repr, args))
+    return u':'.join(map(smart_text, args))
 
 
 def digest_args(args):
