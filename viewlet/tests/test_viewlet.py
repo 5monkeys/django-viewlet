@@ -98,7 +98,7 @@ class ViewletTest(TestCase):
         def hello_request_context(context, greeting, request):
             return {
                 'greeting': greeting,
-                'request': request,
+                'request': context.get('request', request),
             }
 
         @viewlet(template='hello_from_dir.html', timeout=0)
