@@ -13,7 +13,7 @@ from django.test import TestCase, Client
 
 from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models, exceptions
 from ..exceptions import UnknownViewlet
-from ..cache import get_cache, make_key_args_join, digest_args
+from ..cache import get_cache, make_key_args_join
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
