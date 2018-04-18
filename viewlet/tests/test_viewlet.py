@@ -212,6 +212,13 @@ class ViewletTest(TestCase):
         html3 = self.render(template)
         self.assertNotEqual(html3, html2)
 
+        html4 = self.render(template)
+        self.assertEqual(html3, html4)
+
+        self.hello_cached_timestamp.expire('world')
+        html5 = self.render(template)
+        self.assertNotEqual(html5, html4)
+
     def test_view(self):
         client = Client()
         url = reverse('viewlet', args=['hello_cache'])

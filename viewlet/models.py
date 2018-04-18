@@ -65,6 +65,7 @@ class Viewlet(object):
         def call_with_refresh(*args, **kwargs):
             return self.call(*args, **kwargs)
         setattr(call_with_refresh, 'refresh', self.refresh)
+        setattr(call_with_refresh, 'expire', self.expire)
 
         return call_with_refresh
 
