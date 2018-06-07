@@ -4,7 +4,8 @@ import six
 import warnings
 
 from .cache import get_cache
-from .compat import smart_text, smart_bytes, get_func_args, import_module
+from .compat import smart_text, smart_bytes, get_func_args, \
+    get_func_defaults, import_module
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
@@ -55,6 +56,7 @@ class Viewlet(object):
         """
         self.viewlet_func = func
         self.viewlet_func_args = get_func_args(func)
+        self.viewlet_func_defaults = get_func_defaults(func)
         self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
@@ -70,8 +72,16 @@ class Viewlet(object):
         return call_with_refresh
 
     def _build_args(self, *args, **kwargs):
-        viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
-        viewlet_func_kwargs.update(dict((k, kwargs[k]) for k in kwargs if k in self.viewlet_func_args))
+        viewlet_func_kwargs = self.viewlet_func_defaults.copy()
+        viewlet_func_kwargs.update(dict(
+            (self.viewlet_func_args[i], args[i])
+            for i in range(0, len(args))
+        ))
+        viewlet_func_kwargs.update(dict(
+            (k, kwargs[k])
+            for k in kwargs
+            if k in self.viewlet_func_args
+        ))
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):

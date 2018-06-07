@@ -45,6 +45,18 @@ def get_func_args(func):
     return inspect.getargspec(func).args
 
 
+def get_func_defaults(func):
+    if PY3:
+        params = inspect.signature(func).parameters
+        return dict((k, v.default) for k, v in params.items() if not v.empty)
+    spec = inspect.getargspec(func)
+    vals = spec.defaults
+    if not vals:
+        return {}
+    keys = spec.args[-len(vals):]
+    return dict(zip(keys, vals))
+
+
 def import_module(name):
     if sys.version_info < (2, 7):
         if django.VERSION < (1, 7):
