@@ -40,7 +40,9 @@ def main():
         'ROOT_URLCONF': 'viewlet.tests.urls',
         'SECRET_KEY': "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!",
 
-        'TEMPLATE_CONTEXT_PROCESSORS': [],
+        'TEMPLATE_CONTEXT_PROCESSORS': [
+            'django.core.context_processors.request',
+        ],
         'TEMPLATE_DIRS': (os.path.join(ROOT, 'template_dir'),),
 
         'TEMPLATES': [

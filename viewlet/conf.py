@@ -18,6 +18,8 @@ class ViewletSettings(dict):
 
 settings = ViewletSettings(**{
     'VIEWLET_DEFAULT_CACHE_ALIAS': 'viewlet',
+    'VIEWLET_CACHE_KEY_FUNCTION': 'viewlet.cache.make_key_args_digest',
+    'VIEWLET_CACHE_KEY_MAX_LENGTH': 255,
     'VIEWLET_TEMPLATE_ENGINE': 'django',
     'VIEWLET_INFINITE_CACHE_TIMEOUT': 31104000,  # 60*60*24*30*12, about a year
     'VIEWLET_JINJA2_ENVIRONMENT': 'viewlet.loaders.jinja2_loader.create_env'

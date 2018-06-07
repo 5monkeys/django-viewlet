@@ -1,16 +1,19 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 import imp
 import logging
 import six
 from time import time, sleep
+
 import django
 import django.conf
 from django.template import TemplateSyntaxError
 from django.test import TestCase, Client
-from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models
+
+from .. import call, conf, get, get_version, refresh, viewlet, cache as cache_m, library, models, exceptions
 from ..exceptions import UnknownViewlet
-from ..cache import get_cache
+from ..cache import get_cache, make_key_args_join
 from ..conf import settings
 from ..loaders import jinja2_loader
 from ..loaders.jinja2_loader import get_env
@@ -21,7 +24,7 @@ from .compat import get_template_from_string, reverse, override_settings, \
 
 cache = get_cache()
 
-__all__ = ['ViewletTest', 'ViewletCacheBackendTest']
+__all__ = ['ViewletTest', 'ViewletCacheBackendTest', 'ViewletKeyTest']
 
 
 class ViewletTest(TestCase):
@@ -201,6 +204,14 @@ class ViewletTest(TestCase):
         html3 = self.render(template)
         self.assertNotEqual(html3, html2)
 
+        sleep(0.01)
+        html4 = self.render(template)
+        self.assertEqual(html3, html4)
+
+        self.hello_cached_timestamp.expire('world')
+        html5 = self.render(template)
+        self.assertNotEqual(html5, html4)
+
     def test_view(self):
         client = Client()
         url = reverse('viewlet', args=['hello_cache'])
@@ -208,6 +219,13 @@ class ViewletTest(TestCase):
         self.assertEqual(response.status_code, 200)
         html = call('hello_cache', None, u'wörld')
         self.assertEqual(response.content.decode('utf-8'), html)
+
+    def test_view_request(self):
+        client = Client()
+        url = reverse('viewlet', args=['hello_request'])
+        response = client.get(url, {'greeting': u'wörld'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, u'wörld AnonymousUser!')
 
     def test_jinja_tag(self):
         template = self.get_jinja_template(u"<h1>{% viewlet 'hello_nocache', viewlet_arg %}</h1>")
@@ -362,13 +380,79 @@ class ViewletCacheBackendTest(TestCase):
         v = get('hello_cached_timestamp_settings_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        self.assertTrue(v.cache.get(cache_key) is None)
+        self.assertIsNone(v._cache_get(cache_key))
 
     @skipIf(django.VERSION < (1, 3), "Django < 1.3")
     def test_cache_backend_from_argument(self):
         v = get('hello_cached_timestamp_argument_cache')
         v.call({}, 'world')
         cache_key = v._build_cache_key('world')
-        self.assertTrue(v.cache.get(cache_key) is not None)
-        sleep(v.cache.default_timeout)
-        self.assertTrue(v.cache.get(cache_key) is None)
+        self.assertIsNotNone(v._cache_get(cache_key))
+        sleep(v.cache.default_timeout + 0.01)
+        self.assertIsNone(v._cache_get(cache_key))
+
+
+class ViewletKeyTest(TestCase):
+
+    def setUp(self):
+        @viewlet(timeout=1, key='somekey')
+        def custom_key_without_args(context):
+            return u'hello'
+
+        @viewlet(timeout=1, key='somekey')
+        def custom_key_missing_args(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        @viewlet(timeout=1, key='somekey:{args}')
+        def custom_key_with_args(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        @viewlet(timeout=1, key='somekey(%s,%s)')
+        def custom_key_old_format(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+    def test_custom_key_without_args(self):
+        v = get('custom_key_without_args')
+        self.assertEqual(v._build_cache_key(), 'somekey')
+
+    def test_custom_key_missing_args(self):
+        v = get('custom_key_missing_args')
+        args = ('Hello', 'world')
+        self.assertRaises(exceptions.WrongKeyFormat, v._build_cache_key, *args)
+
+    def test_custom_key_with_args(self):
+        v = get('custom_key_with_args')
+        args = ('Hello', 'world')
+        v.call({}, *args)
+        cache_key = v._build_cache_key(*args)
+        self.assertTrue(v._build_cache_key().startswith('somekey:'))
+        self.assertEqual(v._cache_get(cache_key), u'%s %s!' % args)
+
+    def test_custom_key_old_format(self):
+        v = get('custom_key_old_format')
+        args = ('Hello', 'world')
+        self.assertRaises(exceptions.DeprecatedKeyFormat, v._build_cache_key, *args)
+
+    def test_key_args_join(self):
+        self.key_func = 'viewlet.cache.make_key_args_join'
+        django.conf.settings.VIEWLET_CACHE_KEY_FUNCTION = self.key_func
+        self.assertNotEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)
+
+        @viewlet(timeout=10)
+        def name_args_join(context, greet, name):
+            return u'%s %s!' % (greet, name)
+
+        v = get('name_args_join')
+        args = ('Hello', 'world')
+        v.call({}, *args)
+        cache_key = v._build_cache_key(*args)
+        self.assertEqual(cache_key, make_key_args_join(v, args))
+        self.assertEqual(v._cache_get(cache_key), u'%s %s!' % args)
+
+        del django.conf.settings.VIEWLET_CACHE_KEY_FUNCTION
+        for m in [conf, cache_m, library, models]:  # conf must be reloaded first; do NOT move to a function
+            imp.reload(m)
+        self.assertNotEqual(self.key_func, conf.settings.VIEWLET_CACHE_KEY_FUNCTION)

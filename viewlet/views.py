@@ -9,7 +9,7 @@ from viewlet.loaders import querydict_to_kwargs
 
 def viewlet_view(request, name):
     if django.VERSION >= (1, 8):
-        context = {}
+        context = {'request': request}
         kwargs = {'request': request}
     else:
         context = RequestContext(request)

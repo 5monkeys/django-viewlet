@@ -1,6 +1,9 @@
 # coding=utf-8
 from __future__ import unicode_literals
+import hashlib
+from .compat import smart_text
 from .conf import settings
+from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
 
 
 def get_cache(alias=None):
@@ -16,3 +19,30 @@ def get_cache(alias=None):
         c = cache.cache
 
     return c
+
+
+def join_args(args):
+    return u':'.join(map(smart_text, args))
+
+
+def digest_args(args):
+    return hashlib.sha1(join_args(args).encode('utf8')).hexdigest()
+
+
+def make_key_args_fmt(viewlet, args):
+    if viewlet.key:
+        if '%' in viewlet.key:
+            raise DeprecatedKeyFormat
+        if viewlet.has_args and '{args}' not in viewlet.key:
+            raise WrongKeyFormat
+
+    fmt = viewlet.key or 'viewlet:%s:{args}' % viewlet.name
+    return fmt.format(args=args)
+
+
+def make_key_args_join(viewlet, args):
+    return make_key_args_fmt(viewlet, join_args(args))
+
+
+def make_key_args_digest(viewlet, args):
+    return make_key_args_fmt(viewlet, digest_args(args))

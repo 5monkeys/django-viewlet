@@ -4,12 +4,21 @@ import six
 import warnings
 
 from .cache import get_cache
-from .compat import smart_text, smart_bytes, get_func_args
+from .compat import smart_text, smart_bytes, get_func_args, import_module
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
 from .loaders import render
 
+import django
 from django.template.context import BaseContext
+
+
+def import_by_path(path):
+    m, _, f = path.rpartition('.')
+    return getattr(import_module(m), f)
+
+
+default_key_func = import_by_path(settings.VIEWLET_CACHE_KEY_FUNCTION)
 
 
 class Viewlet(object):
@@ -23,7 +32,8 @@ class Viewlet(object):
         self.name = name
         self.template = template
         self.key = key
-        self.key_mod = False
+        self.has_args = False
+        self.cache_alias = using
         self.cache = get_cache(alias=using)
         if timeout is None:
             # Handle infinite caching, due to Django's cache backend not respecting 0
@@ -45,20 +55,17 @@ class Viewlet(object):
         """
         self.viewlet_func = func
         self.viewlet_func_args = get_func_args(func)
+        self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
             self.name = getattr(func, 'func_name', getattr(func, '__name__'))
 
-        func_argcount = len(self.viewlet_func_args) - 1
-        if self.timeout:
-            # TODO: HASH KEY
-            self.key = u'viewlet:%s(%s)' % (self.name, ','.join(['%s' for _ in range(0, func_argcount)]))
-            self.key_mod = func_argcount > 0
         self.library.add(self)
 
         def call_with_refresh(*args, **kwargs):
             return self.call(*args, **kwargs)
         setattr(call_with_refresh, 'refresh', self.refresh)
+        setattr(call_with_refresh, 'expire', self.expire)
 
         return call_with_refresh
 
@@ -71,10 +78,22 @@ class Viewlet(object):
         """
         Build cache key based on viewlet argument except initial context argument.
         """
-        return self.key if not self.key_mod else self.key % tuple(args)
+        key = self.key
+        if key and callable(key):
+            key = key(self, args)
+        else:
+            key = default_key_func(self, args)
+        max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
+        assert len(key) <= max_len, \
+            u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
+                key=key, max_len=max_len)
+        return key
 
     def _cache_get(self, key):
-        return self.cache.get(key)
+        s = self.cache.get(key)
+        if isinstance(s, six.binary_type):
+            s = smart_text(s)
+        return s
 
     def _cache_set(self, key, value):
         timeout = self.timeout
@@ -89,6 +108,7 @@ class Viewlet(object):
         The actual wrapper around the decorated viewlet function.
         """
         refresh = kwargs.pop('refresh', False)
+        request = kwargs.pop('request', None)
         merged_args = self._build_args(*args, **kwargs)
         output = self._call(merged_args, refresh)
 
@@ -102,7 +122,11 @@ class Viewlet(object):
                 context = dict(context)
 
             context.update(output)
-            output = self.render(context)
+            if django.VERSION >= (1, 8):
+                kw = {'request': request}
+            else:
+                kw = {}
+            output = self.render(context, **kw)
 
             if isinstance(context, BaseContext):
                 context.pop()
@@ -114,7 +138,10 @@ class Viewlet(object):
         Executes the actual call to the viewlet function and handles all the cache logic
         """
 
-        cache_key = self._build_cache_key(*merged_args[1:])
+        if self.is_using_cache():
+            cache_key = self._build_cache_key(*merged_args[1:])
+        else:
+            cache_key = None
 
         if refresh or not self.is_using_cache():
             output = None
@@ -132,12 +159,12 @@ class Viewlet(object):
     def is_using_cache(self):
         return self.timeout != 0
 
-    def render(self, context):
+    def render(self, context, **kwargs):
         """
         Renders the viewlet template.
         The render import is based on settings.VIEWLET_TEMPLATE_ENGINE (default django).
         """
-        return render(self.template, context)
+        return render(self.template, context, **kwargs)
 
     def refresh(self, *args):
         """
