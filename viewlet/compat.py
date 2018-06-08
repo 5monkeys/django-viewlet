@@ -48,7 +48,9 @@ def get_func_args(func):
 def get_func_defaults(func):
     if PY3:
         params = inspect.signature(func).parameters
-        return dict((k, v.default) for k, v in params.items() if not v.empty)
+        return dict((k, v.default)
+                    for k, v in params.items()
+                    if v.default != v.empty)
     spec = inspect.getargspec(func)
     vals = spec.defaults
     if not vals:
