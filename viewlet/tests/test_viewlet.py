@@ -164,6 +164,11 @@ class ViewletTest(TestCase):
         template = self.get_django_template("<h1>{% viewlet hello_world name= %}</h1>")
         self.assertRaises(TemplateSyntaxError, self.render, template)
 
+    def test_default_value(self):
+        template = self.get_django_template("<h1>{% viewlet hello_nocache %}</h1>")
+        html = self.render(template)
+        self.assertEqual(html.strip(), u'<h1>Hello wurld!\n</h1>')
+
     def test_cached_tag(self):
         template = self.get_django_template("<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>")
         html1 = self.render(template)
