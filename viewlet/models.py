@@ -166,17 +166,17 @@ class Viewlet(object):
         """
         return render(self.template, context, **kwargs)
 
-    def refresh(self, *args):
+    def refresh(self, *args, **kwargs):
         """
         Shortcut to _call() with the refresh arg set to True to force a cache update.
         """
-        merged_args = self._build_args({}, *args)
+        merged_args = self._build_args({}, *args, **kwargs)
         return self._call(merged_args, refresh=True)
 
-    def expire(self, *args):
+    def expire(self, *args, **kwargs):
         """
         Clears cached viewlet based on args
         """
-        merged_args = self._build_args({}, *args)
+        merged_args = self._build_args({}, *args, **kwargs)
         dyna_key = self._build_cache_key(*merged_args[1:])
         self.cache.delete(dyna_key)
