@@ -3,8 +3,8 @@
 
 Render template parts with extended cache control.
 
-.. image:: https://travis-ci.org/5monkeys/django-viewlet.svg?branch=master
-    :target: https://travis-ci.org/5monkeys/django-viewlet
+.. image:: https://travis-ci.com/5monkeys/django-viewlet.svg?branch=master
+    :target: https://travis-ci.com/5monkeys/django-viewlet
 
 .. image:: https://coveralls.io/repos/5monkeys/django-viewlet/badge.svg?branch=master
     :target: https://coveralls.io/r/5monkeys/django-viewlet?branch=master
@@ -25,7 +25,7 @@ Install django-viewlet in your python environment
 
     $ pip install django-viewlet
 
-Supports ``Django`` versions 1.3 - 2.0 and ``Python`` versions 2.6 - 3.6.
+Supports ``Django`` versions 1.3 - 2.0 and ``Python`` version 3.6.
 
 
 Configuration
@@ -42,13 +42,6 @@ Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the templa
 
 Jinja2
 ______
-
-If you're using ``Jinja2`` as your template engine for Django versions < 1.8,
-put this in your Django settings:
-
-.. code-block:: python
-
-    VIEWLET_TEMPLATE_ENGINE = "jinja2"
 
 
 If you're using ``Coffin`` or ``Jingo``, add the ``ViewletExtension`` to their settings,
