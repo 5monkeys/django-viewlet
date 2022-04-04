@@ -3,12 +3,13 @@ import os
 import sys
 import warnings
 
+import django
+from django.conf import settings
+
 # We do it first before Django loads, and then again in tests
 warnings.simplefilter("error")
 warnings.filterwarnings("ignore", module="cgi")
 
-import django
-from django.conf import settings
 
 ROOT = os.path.join(os.path.dirname(__file__), "viewlet/tests")
 

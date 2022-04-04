@@ -65,15 +65,15 @@ class Viewlet:
         self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
-            self.name = getattr(func, "func_name", getattr(func, "__name__"))
+            self.name = getattr(func, "func_name", func.__name__)
 
         self.library.add(self)
 
         def call_with_refresh(*args, **kwargs):
             return self.call(*args, **kwargs)
 
-        setattr(call_with_refresh, "refresh", self.refresh)
-        setattr(call_with_refresh, "expire", self.expire)
+        call_with_refresh.refresh = self.refresh
+        call_with_refresh.expire = self.expire
 
         return call_with_refresh
 
@@ -98,7 +98,7 @@ class Viewlet:
         max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
         assert (
             len(key) <= max_len
-        ), u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
+        ), "Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
             key=key, max_len=max_len
         )
         return key

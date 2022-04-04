@@ -36,8 +36,8 @@ Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the templa
 .. code-block:: python
 
     INSTALLED_APPS = (
-        ...
-        'viewlet',
+        ...,
+        "viewlet",
     )
 
 Jinja2
@@ -48,7 +48,7 @@ put this in your Django settings:
 
 .. code-block:: python
 
-    VIEWLET_TEMPLATE_ENGINE = 'jinja2'
+    VIEWLET_TEMPLATE_ENGINE = "jinja2"
 
 
 If you're using ``Coffin`` or ``Jingo``, add the ``ViewletExtension`` to their settings,
@@ -59,24 +59,24 @@ and optionally switch to their respective environment.
 .. code-block:: python
 
     JINJA2_EXTENSIONS = (
-        ...
-        'viewlet.loaders.jinja2_loader.ViewletExtension',
+        ...,
+        "viewlet.loaders.jinja2_loader.ViewletExtension",
     )
 
-    VIEWLET_JINJA2_ENVIRONMENT = 'coffin.common.env'
+    VIEWLET_JINJA2_ENVIRONMENT = "coffin.common.env"
 
 **Jingo:**
 
 .. code-block:: python
 
     JINJA_CONFIG = {
-        'extensions': (
-            ...
-           'viewlet.loaders.jinja2_loader.ViewletExtension',
+        "extensions": (
+            ...,
+            "viewlet.loaders.jinja2_loader.ViewletExtension",
         ),
     }
 
-    VIEWLET_JINJA2_ENVIRONMENT = 'jingo.get_env'
+    VIEWLET_JINJA2_ENVIRONMENT = "jingo.get_env"
 
 **Django 1.8+:**
 
@@ -84,19 +84,21 @@ Add ``ViewletExtension`` to the list of extensions of Jinja2 template engine
 
 .. code-block:: python
 
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.jinja2.Jinja2',
-            # ...
-            'OPTIONS': {
+    TEMPLATES = (
+        [
+            {
+                "BACKEND": "django.template.backends.jinja2.Jinja2",
                 # ...
-                'extensions': [
+                "OPTIONS": {
                     # ...
-                    'viewlet.loaders.jinja2_loader.ViewletExtension',
-                ],
+                    "extensions": [
+                        # ...
+                        "viewlet.loaders.jinja2_loader.ViewletExtension",
+                    ],
+                },
             }
-        }
-    ],
+        ],
+    )
 
 
 Usage
@@ -111,9 +113,10 @@ Place your viewlets in ``viewlets.py`` or existing ``views.py`` in your django a
     from django.template.loader import render_to_string
     from viewlet import viewlet
 
+
     @viewlet
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 
 You can then render the viewlet with the ``viewlet`` template tag:
@@ -139,11 +142,11 @@ which alias should be used in settings:
 
 .. code-block:: python
 
-    VIEWLET_DEFAULT_CACHE_ALIAS = 'template_cache'
+    VIEWLET_DEFAULT_CACHE_ALIAS = "template_cache"
 
     CACHES = {
         # ...
-        'template_cache': {
+        "template_cache": {
             # ...
         },
         # ...
@@ -153,9 +156,9 @@ Additionally, you can override cache alias in viewlet decorator with ``using`` a
 
 .. code-block:: python
 
-    @viewlet(using='super_cache')
+    @viewlet(using="super_cache")
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 
 Refreshing viewlets
@@ -166,9 +169,10 @@ A cached viewlet can be re-rendered and updated behind the scenes with ``viewlet
 .. code-block:: python
 
     import viewlet
-    viewlet.refresh('hello_user', 'monkey')
+
+    viewlet.refresh("hello_user", "monkey")
     # or
-    hello_user.refresh('monkey')
+    hello_user.refresh("monkey")
 
 
 The decorator
@@ -177,7 +181,8 @@ _____________
 .. code-block:: python
 
     @viewlet(name, template, key, timeout)
-
+    def my_viewlet():
+        ...
 
 * name
     Optional reference name for the viewlet, defaults to function name.
@@ -197,9 +202,9 @@ The content returned by the viewlet will by default be cached. Use the ``timeout
 
 .. code-block:: python
 
-    @viewlet(timeout=30*60)
+    @viewlet(timeout=30 * 60)
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 ..
 
@@ -212,9 +217,9 @@ viewlet argument.
 
 .. code-block:: python
 
-    @viewlet(timeout=30*60, key='some_cache_key_%s')
+    @viewlet(timeout=30 * 60, key="some_cache_key_%s")
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 
 Django viewlet will cache returned context instead of html by using the ``template`` decorator argument.
@@ -223,9 +228,9 @@ The specified template will then be rendered with the viewlet context merged wit
 
 .. code-block:: python
 
-    @viewlet(template='hello_user.html', timeout=30*60)
+    @viewlet(template="hello_user.html", timeout=30 * 60)
     def hello_user(context, name):
-        return {'name': name}
+        return {"name": name}
 
 ..
 
@@ -238,16 +243,16 @@ If there is no need for caching, set the viewlet decorator argument ``timeout`` 
 
     @viewlet(timeout=0)
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 
 By default your viewlets will be named as the function. To override this you can set the decorator argument ``name``
 
 .. code-block:: python
 
-    @viewlet(name='greeting')
+    @viewlet(name="greeting")
     def hello_user(context, name):
-        return render_to_string('hello_user.html', {'name': name})
+        return render_to_string("hello_user.html", {"name": name})
 
 
 A powerful usage of ``viewlet.refresh`` is to use it together with Django signals:
@@ -257,13 +262,16 @@ A powerful usage of ``viewlet.refresh`` is to use it together with Django signal
     class Product(Model):
         name = CharField(max_length=255)
 
+
     @viewlet(timeout=None)
     def product_teaser(context, id):
         product = get_context_object(Product, id, context)
-        return render_to_string('product_teaser.html', locals())
+        return render_to_string("product_teaser.html", locals())
+
 
     def refresh_product_teaser(instance, **kwargs):
-        viewlet.refresh('product_teaser', instance.id)
+        viewlet.refresh("product_teaser", instance.id)
+
 
     post_save.connect(refresh_product_teaser, Product)
 
@@ -272,8 +280,9 @@ Viewlets can also be accesses with AJAX by adding ``viewlet.urls`` to your Djang
 
 .. code-block:: python
 
-    urlpatterns = patterns('',
-        (r'^viewlet/', include('viewlet.urls')),
+    urlpatterns = patterns(
+        "",
+        (r"^viewlet/", include("viewlet.urls")),
     )
 
 
