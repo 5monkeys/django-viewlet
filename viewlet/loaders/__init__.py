@@ -12,7 +12,7 @@ def get_loader():
 
             return loader
         warnings.warn(
-            "VIEWLET_TEMPLATE_ENGINE setting is deprecated for " "Django 1.8+",
+            "VIEWLET_TEMPLATE_ENGINE setting is deprecated for Django 1.8+",
             DeprecationWarning,
         )
     from . import django_loader as loader
