@@ -1,5 +1,6 @@
 import functools
 import sys
+
 import django
 
 if django.VERSION < (1, 8):
@@ -8,7 +9,7 @@ else:
     from django.template import engines
 
     def get_template_from_string(template_code):
-        return engines['django'].from_string(template_code)
+        return engines["django"].from_string(template_code)
 
 
 if django.VERSION < (1, 10):
@@ -25,6 +26,7 @@ else:
 
 
 if sys.version_info < (2, 7):
+
     def skipIf(condition, reason):
         def _decorator(test_item):
             @functools.wraps(test_item)
@@ -33,14 +35,18 @@ if sys.version_info < (2, 7):
                     sys.stdout.write("skipped %r" % reason)
                 else:
                     return test_item(*args, **kwargs)
+
             return _wrapper
+
         return _decorator
+
 else:
     from unittest import skipIf
 
 
 __all__ = [
-    'get_template_from_string', 'reverse',
-    'skipIf',
-    'override_settings',
+    "get_template_from_string",
+    "reverse",
+    "skipIf",
+    "override_settings",
 ]

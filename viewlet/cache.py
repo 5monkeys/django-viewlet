@@ -1,6 +1,5 @@
-# coding=utf-8
-from __future__ import unicode_literals
 import hashlib
+
 from .compat import smart_text
 from .conf import settings
 from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
@@ -9,6 +8,7 @@ from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
 def get_cache(alias=None):
     import django
     from django.core import cache
+
     try:
         key = alias or settings.VIEWLET_DEFAULT_CACHE_ALIAS
         if django.VERSION >= (1, 7):
@@ -22,21 +22,21 @@ def get_cache(alias=None):
 
 
 def join_args(args):
-    return u':'.join(map(smart_text, args))
+    return ":".join(map(smart_text, args))
 
 
 def digest_args(args):
-    return hashlib.sha1(join_args(args).encode('utf8')).hexdigest()
+    return hashlib.sha1(join_args(args).encode("utf8")).hexdigest()
 
 
 def make_key_args_fmt(viewlet, args):
     if viewlet.key:
-        if '%' in viewlet.key:
+        if "%" in viewlet.key:
             raise DeprecatedKeyFormat
-        if viewlet.has_args and '{args}' not in viewlet.key:
+        if viewlet.has_args and "{args}" not in viewlet.key:
             raise WrongKeyFormat
 
-    fmt = viewlet.key or 'viewlet:%s:{args}' % viewlet.name
+    fmt = viewlet.key or "viewlet:%s:{args}" % viewlet.name
     return fmt.format(args=args)
 
 

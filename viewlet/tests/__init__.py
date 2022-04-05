@@ -1,2 +1,1 @@
-# coding=utf-8
-from .test_viewlet import ViewletTest, ViewletCacheBackendTest, ViewletKeyTest  # NOQA
+from .test_viewlet import ViewletCacheBackendTest, ViewletKeyTest, ViewletTest  # NOQA
