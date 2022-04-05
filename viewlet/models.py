@@ -1,33 +1,38 @@
-# coding=utf-8
-from __future__ import unicode_literals
-import six
 import warnings
-
-from .cache import get_cache
-from .compat import smart_text, smart_bytes, get_func_args, import_module
-from .conf import settings
-from .const import DEFAULT_TIMEOUT
-from .loaders import render
 
 import django
 from django.template.context import BaseContext
 
+from .cache import get_cache
+from .compat import get_func_args, import_module, smart_bytes, smart_text
+from .conf import settings
+from .const import DEFAULT_TIMEOUT
+from .loaders import render
+
 
 def import_by_path(path):
-    m, _, f = path.rpartition('.')
+    m, _, f = path.rpartition(".")
     return getattr(import_module(m), f)
 
 
 default_key_func = import_by_path(settings.VIEWLET_CACHE_KEY_FUNCTION)
 
 
-class Viewlet(object):
+class Viewlet:
     """
     Representation of a viewlet
     """
 
-    def __init__(self, library, name=None, template=None, key=None, timeout=DEFAULT_TIMEOUT, using=None,
-                 cached=True):
+    def __init__(
+        self,
+        library,
+        name=None,
+        template=None,
+        key=None,
+        timeout=DEFAULT_TIMEOUT,
+        using=None,
+        cached=True,
+    ):
         self.library = library
         self.name = name
         self.template = template
@@ -44,8 +49,10 @@ class Viewlet(object):
             self.timeout = timeout
         if not cached:
             self.timeout = 0
-            warnings.warn('Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
-                          DeprecationWarning)
+            warnings.warn(
+                'Keyword argument "cached" is deprecated, use timeout=0 to disable cache',
+                DeprecationWarning,
+            )
 
     def register(self, func):
         """
@@ -58,20 +65,25 @@ class Viewlet(object):
         self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
-            self.name = getattr(func, 'func_name', getattr(func, '__name__'))
+            self.name = getattr(func, "func_name", func.__name__)
 
         self.library.add(self)
 
         def call_with_refresh(*args, **kwargs):
             return self.call(*args, **kwargs)
-        setattr(call_with_refresh, 'refresh', self.refresh)
-        setattr(call_with_refresh, 'expire', self.expire)
+
+        call_with_refresh.refresh = self.refresh
+        call_with_refresh.expire = self.expire
 
         return call_with_refresh
 
     def _build_args(self, *args, **kwargs):
-        viewlet_func_kwargs = dict((self.viewlet_func_args[i], args[i]) for i in range(0, len(args)))
-        viewlet_func_kwargs.update(dict((k, kwargs[k]) for k in kwargs if k in self.viewlet_func_args))
+        viewlet_func_kwargs = {
+            self.viewlet_func_args[i]: args[i] for i in range(0, len(args))
+        }
+        viewlet_func_kwargs.update(
+            {k: kwargs[k] for k in kwargs if k in self.viewlet_func_args}
+        )
         return [viewlet_func_kwargs.get(arg) for arg in self.viewlet_func_args]
 
     def _build_cache_key(self, *args):
@@ -84,14 +96,16 @@ class Viewlet(object):
         else:
             key = default_key_func(self, args)
         max_len = settings.VIEWLET_CACHE_KEY_MAX_LENGTH
-        assert len(key) <= max_len, \
-            u"Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
-                key=key, max_len=max_len)
+        assert (
+            len(key) <= max_len
+        ), "Viewlet cache key is too long: len(`{key}`) > {max_len}".format(
+            key=key, max_len=max_len
+        )
         return key
 
     def _cache_get(self, key):
         s = self.cache.get(key)
-        if isinstance(s, six.binary_type):
+        if isinstance(s, bytes):
             s = smart_text(s)
         return s
 
@@ -99,7 +113,7 @@ class Viewlet(object):
         timeout = self.timeout
 
         # Avoid pickling string like objects
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = smart_bytes(value)
         self.cache.set(key, value, timeout)
 
@@ -107,8 +121,8 @@ class Viewlet(object):
         """
         The actual wrapper around the decorated viewlet function.
         """
-        refresh = kwargs.pop('refresh', False)
-        request = kwargs.pop('request', None)
+        refresh = kwargs.pop("refresh", False)
+        request = kwargs.pop("request", None)
         merged_args = self._build_args(*args, **kwargs)
         output = self._call(merged_args, refresh)
 
@@ -123,7 +137,7 @@ class Viewlet(object):
 
             context.update(output)
             if django.VERSION >= (1, 8):
-                kw = {'request': request}
+                kw = {"request": request}
             else:
                 kw = {}
             output = self.render(context, **kw)

@@ -1,7 +1,3 @@
-# coding=utf-8
-from __future__ import unicode_literals
-from ..compat import patterns, url, include
+from ..compat import include, patterns, url
 
-urlpatterns = patterns(
-    url(r'viewlet/', include('viewlet.urls'))
-)
+urlpatterns = patterns(url(r"viewlet/", include("viewlet.urls")))

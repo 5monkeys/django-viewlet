@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-# coding=utf-8
 """
 Based partly on Django's own ``setup.py``.
 """
 import codecs
-from distutils.command.install_data import install_data
 import os
-from setuptools import setup, find_packages
 import sys
+from distutils.command.install_data import install_data
+
+from setuptools import find_packages, setup
 
 version = __import__("viewlet").__version__
 
@@ -23,18 +23,18 @@ class osx_install_data(install_data):
         # By the time finalize_options is called, install.install_lib is set to
         # the fixed directory, so we set the installdir to install_lib. The
         # install_data class uses ('install_data', 'install_dir') instead.
-        self.set_undefined_options('install', ('install_lib', 'install_dir'))
+        self.set_undefined_options("install", ("install_lib", "install_dir"))
         install_data.finalize_options(self)
 
+
 if sys.platform == "darwin":
-    cmdclasses = {'install_data': osx_install_data}
+    cmdclasses = {"install_data": osx_install_data}
 else:
-    cmdclasses = {'install_data': install_data}
+    cmdclasses = {"install_data": install_data}
 
 
-readme = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
-if sys.version_info > (3, 0):
-    readme = str(readme)
+readme = codecs.open(os.path.join(os.path.dirname(__file__), "README.rst")).read()
+readme = str(readme)
 
 setup(
     name="django-viewlet",
@@ -44,8 +44,17 @@ setup(
     author="Jonas Lundberg",
     author_email="jonas@5monkeys.se",
     url="https://github.com/5monkeys/django-viewlet",
-    download_url="https://github.com/5monkeys/django-viewlet/tarball/%s" % (version,),
-    keywords=["django", "template", "cache", "view", "subview", "decorator", "refresh", "invalidate"],
+    download_url=f"https://github.com/5monkeys/django-viewlet/tarball/{version}",
+    keywords=[
+        "django",
+        "template",
+        "cache",
+        "view",
+        "subview",
+        "decorator",
+        "refresh",
+        "invalidate",
+    ],
     platforms=["any"],
     license="MIT",
     classifiers=[
@@ -71,12 +80,11 @@ setup(
     zip_safe=False,
     packages=find_packages(),
     include_package_data=False,
-    dependency_links=[
-    ],
+    dependency_links=[],
     install_requires=[
-        'six',
+        "six",
     ],
-    tests_require=['coverage', 'Jinja2', 'jingo', 'coffin<2'],
-    test_suite='run_tests.main',
+    tests_require=["coverage", "Jinja2", "jingo", "coffin<2"],
+    test_suite="run_tests.main",
     cmdclass=cmdclasses,
 )
