@@ -238,21 +238,6 @@ class ViewletTest(TestCase):
         html = template.render({"extra": "Räksmörgås", "viewlet_arg": "wörld"})
         self.assertEqual(html.strip(), "<h1>RäksmörgåsHello wörld!%s</h1>" % self.tail)
 
-    # TODO: port this test
-    @skipIf(six.PY3, "TODO: coffin fails for Python 3.x?")
-    @skipIf(django.VERSION > (1, 7), "Coffin does not support django > 1.7?")
-    def test_custom_jinja2_environment(self):
-        env = get_env()
-        self.assertEqual(env.optimized, True)
-        self.assertEqual(env.autoescape, False)
-        settings.VIEWLET_JINJA2_ENVIRONMENT = "coffin.common.env"
-        jinja2_loader._env = None
-        env = get_env()
-        self.assertEqual(env.optimized, False)
-        settings.VIEWLET_JINJA2_ENVIRONMENT = "jingo.get_env"
-        env = get_env()
-        self.assertEqual(env.autoescape, True)
-
     def test_context_tag(self):
         template = self.get_django_template(
             "<h1>{% viewlet hello_cached_timestamp 'world' %}</h1>"
