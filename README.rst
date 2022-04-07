@@ -25,7 +25,7 @@ Install django-viewlet in your python environment
 
     $ pip install django-viewlet
 
-Supports ``Django`` versions 1.3 - 2.0 and ``Python`` version 3.6.
+Supports ``Django`` versions 2.2, 3.2, 4.0 and ``Python`` versions 3.7 - 3.9.
 
 
 Configuration
@@ -42,36 +42,6 @@ Add ``viewlet`` to your ``INSTALLED_APPS`` setting so Django can find the templa
 
 Jinja2
 ______
-
-
-If you're using ``Coffin`` or ``Jingo``, add the ``ViewletExtension`` to their settings,
-and optionally switch to their respective environment.
-
-**Coffin:**
-
-.. code-block:: python
-
-    JINJA2_EXTENSIONS = (
-        ...,
-        "viewlet.loaders.jinja2_loader.ViewletExtension",
-    )
-
-    VIEWLET_JINJA2_ENVIRONMENT = "coffin.common.env"
-
-**Jingo:**
-
-.. code-block:: python
-
-    JINJA_CONFIG = {
-        "extensions": (
-            ...,
-            "viewlet.loaders.jinja2_loader.ViewletExtension",
-        ),
-    }
-
-    VIEWLET_JINJA2_ENVIRONMENT = "jingo.get_env"
-
-**Django 1.8+:**
 
 Add ``ViewletExtension`` to the list of extensions of Jinja2 template engine
 

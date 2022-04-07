@@ -59,14 +59,9 @@ setup(
     license="MIT",
     classifiers=[
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Framework :: Django",
         "Natural Language :: English",
         "Environment :: Web Environment",
@@ -84,7 +79,7 @@ setup(
     install_requires=[
         "six",
     ],
-    tests_require=["coverage", "Jinja2", "jingo", "coffin<2"],
+    tests_require=["coverage", "Jinja2"],
     test_suite="run_tests.main",
     cmdclass=cmdclasses,
 )

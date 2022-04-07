@@ -1,11 +1,9 @@
 import importlib
 import logging
 from time import sleep, time
-from unittest import skipIf
 
 import django
 import django.conf
-import six
 from django.template import TemplateSyntaxError, engines
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -26,7 +24,6 @@ from ..cache import get_cache, make_key_args_join
 from ..conf import settings
 from ..exceptions import UnknownViewlet
 from ..loaders import jinja2_loader
-from ..loaders.jinja2_loader import get_env
 
 cache = get_cache()
 
@@ -40,7 +37,6 @@ def get_template_from_string(template_code):
 class ViewletTest(TestCase):
     def setUp(self):
         cache.clear()
-        settings.VIEWLET_TEMPLATE_ENGINE = "django"
 
         @viewlet
         def hello_world(context):
@@ -324,12 +320,6 @@ class ViewletTest(TestCase):
         html = template.render({"request": {"user": "nicolas cage"}})
         self.assertTrue(isinstance(html, str))
         self.assertEqual(html, "nice to see you nicolas cage!\n")
-
-    def test_jinja_template_from_dir_warning(self):
-        settings.VIEWLET_TEMPLATE_ENGINE = "jinja2"
-        template = self.get_jinja_template("{% viewlet 'hello_from_dir' %}")
-        func = self.assertRaisesRegex
-        template.render()
 
     def test_request_context(self):
         template = self.get_django_template(

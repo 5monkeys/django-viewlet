@@ -2,7 +2,6 @@ import inspect
 import warnings
 from importlib import import_module
 
-import django
 from django.template.context import BaseContext
 from django.template.loader import render_to_string
 from django.utils.encoding import smart_bytes, smart_str
@@ -175,7 +174,6 @@ class Viewlet:
     def render(self, context, **kwargs):
         """
         Renders the viewlet template.
-        The render import is based on settings.VIEWLET_TEMPLATE_ENGINE (default django).
         """
         return render_to_string(self.template, context, **kwargs)
 
