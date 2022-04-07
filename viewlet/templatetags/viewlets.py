@@ -3,10 +3,10 @@ import re
 
 from django import template
 from django.template import TemplateSyntaxError
+from django.utils.safestring import mark_safe
 
 import viewlet
 from viewlet.exceptions import UnknownViewlet
-from viewlet.loaders import mark_safe
 
 logger = logging.getLogger(__name__)
 register = template.Library()

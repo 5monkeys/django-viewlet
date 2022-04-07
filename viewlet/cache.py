@@ -1,20 +1,17 @@
 import hashlib
 
-from .compat import smart_text
+from django.utils.encoding import smart_str
+
 from .conf import settings
 from .exceptions import DeprecatedKeyFormat, WrongKeyFormat
 
 
 def get_cache(alias=None):
-    import django
     from django.core import cache
 
     try:
         key = alias or settings.VIEWLET_DEFAULT_CACHE_ALIAS
-        if django.VERSION >= (1, 7):
-            c = cache.caches[key]
-        else:
-            c = cache.get_cache(key)
+        c = cache.caches[key]
     except (cache.InvalidCacheBackendError, ValueError):
         c = cache.cache
 
@@ -22,7 +19,7 @@ def get_cache(alias=None):
 
 
 def join_args(args):
-    return ":".join(map(smart_text, args))
+    return ":".join(map(smart_str, args))
 
 
 def digest_args(args):

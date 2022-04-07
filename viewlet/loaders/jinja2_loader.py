@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from django.conf import settings as django_settings
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader, nodes
 from jinja2.environment import Environment
@@ -6,7 +8,6 @@ from jinja2.filters import do_mark_safe
 
 import viewlet
 
-from ..compat import import_module
 from ..conf import settings
 
 

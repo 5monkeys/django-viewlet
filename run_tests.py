@@ -42,7 +42,6 @@ def main():
         "TEMPLATE_CONTEXT_PROCESSORS": [
             "django.core.context_processors.request",
         ],
-        "TEMPLATE_DIRS": (os.path.join(ROOT, "template_dir"),),
         "TEMPLATES": [
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -78,47 +77,32 @@ def main():
         "JINJA_CONFIG": {"autoescape": True},  # Jingo config
     }
 
-    if django.VERSION >= (1, 10):
-        conf["MIDDLEWARE"] = conf.pop("MIDDLEWARE_CLASSES")
+    conf["MIDDLEWARE"] = conf.pop("MIDDLEWARE_CLASSES")
 
-    if django.VERSION < (1, 8):
-        conf.pop("TEMPLATES")
-    else:
-        conf.pop("TEMPLATE_DEBUG")
-        conf.pop("TEMPLATE_CONTEXT_PROCESSORS")
-        conf.pop("TEMPLATE_DIRS")
+    conf.pop("TEMPLATE_DEBUG")
+    conf.pop("TEMPLATE_CONTEXT_PROCESSORS")
 
-    if django.VERSION >= (1, 2):
-        conf.update(
-            DATABASES={
-                "default": {
-                    "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": ":memory:",
-                }
+    conf.update(
+        DATABASES={
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
             }
-        )
+        }
+    )
 
-        conf.update(
-            CACHES={
-                "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
-            }
-        )
-    else:
-        conf.update(DATABASE_ENGINE="sqlite3")
-        conf.update(CACHE_BACKEND="locmem://")
+    conf.update(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    )
 
     settings.configure(**conf)
 
-    if django.VERSION >= (1, 7):
-        django.setup()
+    django.setup()
 
     from django.test.utils import get_runner
 
-    if django.VERSION < (1, 2):
-        failures = get_runner(settings)(["viewlet"], verbosity=2, interactive=True)
-    else:
-        test_runner = get_runner(settings)(verbosity=2, interactive=True)
-        failures = test_runner.run_tests(["viewlet"])
+    test_runner = get_runner(settings)(verbosity=2, interactive=True)
+    failures = test_runner.run_tests(["viewlet"])
 
     sys.exit(failures)
 

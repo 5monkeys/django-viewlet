@@ -1,13 +1,15 @@
+import inspect
 import warnings
+from importlib import import_module
 
 import django
 from django.template.context import BaseContext
+from django.template.loader import render_to_string
+from django.utils.encoding import smart_bytes, smart_str
 
 from .cache import get_cache
-from .compat import get_func_args, import_module, smart_bytes, smart_text
 from .conf import settings
 from .const import DEFAULT_TIMEOUT
-from .loaders import render
 
 
 def import_by_path(path):
@@ -61,7 +63,7 @@ class Viewlet:
         function as the actual wrapper
         """
         self.viewlet_func = func
-        self.viewlet_func_args = get_func_args(func)
+        self.viewlet_func_args = list(inspect.signature(func).parameters.keys())
         self.has_args = len(self.viewlet_func_args) > 1
 
         if not self.name:
@@ -106,7 +108,7 @@ class Viewlet:
     def _cache_get(self, key):
         s = self.cache.get(key)
         if isinstance(s, bytes):
-            s = smart_text(s)
+            s = smart_str(s)
         return s
 
     def _cache_set(self, key, value):
@@ -136,16 +138,13 @@ class Viewlet:
                 context = dict(context)
 
             context.update(output)
-            if django.VERSION >= (1, 8):
-                kw = {"request": request}
-            else:
-                kw = {}
+            kw = {"request": request}
             output = self.render(context, **kw)
 
             if isinstance(context, BaseContext):
                 context.pop()
 
-        return smart_text(output)
+        return smart_str(output)
 
     def _call(self, merged_args, refresh=False):
         """
@@ -178,7 +177,7 @@ class Viewlet:
         Renders the viewlet template.
         The render import is based on settings.VIEWLET_TEMPLATE_ENGINE (default django).
         """
-        return render(self.template, context, **kwargs)
+        return render_to_string(self.template, context, **kwargs)
 
     def refresh(self, *args, **kwargs):
         """
