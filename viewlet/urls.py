@@ -1,4 +1,5 @@
-from . import views
-from .compat import patterns, url
+from django.urls import re_path
 
-urlpatterns = patterns(url(r"^(?P<name>.+)/$", views.viewlet_view, name="viewlet"))
+from . import views
+
+urlpatterns = [re_path(r"^(?P<name>.+)/$", views.viewlet_view, name="viewlet")]

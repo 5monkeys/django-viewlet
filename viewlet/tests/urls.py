@@ -1,3 +1,4 @@
-from ..compat import include, patterns, url
+from django.conf.urls import include
+from django.urls import re_path
 
-urlpatterns = patterns(url(r"viewlet/", include("viewlet.urls")))
+urlpatterns = [re_path(r"viewlet/", include("viewlet.urls"))]
