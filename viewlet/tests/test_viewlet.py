@@ -30,10 +30,6 @@ cache = get_cache()
 __all__ = ["ViewletTest", "ViewletCacheBackendTest", "ViewletKeyTest"]
 
 
-def get_template_from_string(template_code):
-    return engines["django"].from_string(template_code)
-
-
 class ViewletTest(TestCase):
     def setUp(self):
         cache.clear()
@@ -123,7 +119,7 @@ class ViewletTest(TestCase):
     def render(self, source, context=None, request=None):
         kwargs = {"context": context or {}, "request": request}
 
-        return get_template_from_string(source).render(**kwargs).strip()
+        return engines["django"].from_string(source).render(**kwargs).strip()
 
     def test_version(self):
         self.assertEqual(get_version((1, 2, 3, "alpha", 1)), "1.2.3a1")
