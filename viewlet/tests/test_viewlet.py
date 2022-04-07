@@ -363,14 +363,16 @@ class ViewletTest(TestCase):
 
 
 class ViewletCacheBackendTest(TestCase):
-    def setUp(self):
-        # Django 1.3.x does not support override_settings
-        django.conf.settings.CACHES = {
+    @override_settings(VIEWLET_DEFAULT_CACHE_ALIAS="dummy")
+    @override_settings(
+        CACHES={
             "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
             "short": {"BACKEND": "viewlet.tests.utils.ShortLocMemCache"},
             "dummy": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
         }
-        django.conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS = "dummy"
+    )
+    def setUp(self):
+
         self.assertNotEqual("dummy", conf.settings.VIEWLET_DEFAULT_CACHE_ALIAS)
         for m in [
             conf,
@@ -410,8 +412,7 @@ class ViewletCacheBackendTest(TestCase):
         v = get("hello_cached_timestamp_settings_cache")
         v.call({}, "world")
         cache_key = v._build_cache_key("world")
-        # self.assertIsNone(v._cache_get(cache_key))
-        # TODO: This is no longer None ({'name': 'world', 'timestamp': 1649166957.8413181})
+        self.assertIsNone(v._cache_get(cache_key))
 
     def test_cache_backend_from_argument(self):
         v = get("hello_cached_timestamp_argument_cache")
