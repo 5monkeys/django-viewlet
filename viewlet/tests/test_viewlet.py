@@ -418,8 +418,8 @@ class ViewletCacheBackendTest(TestCase):
         v.call({}, "world")
         cache_key = v._build_cache_key("world")
         self.assertIsNotNone(v._cache_get(cache_key))
-        # sleep(v.cache.default_timeout + 0.01)
-        # self.assertIsNone(v._cache_get(cache_key))
+        sleep(v.cache.default_timeout + 0.01)
+        self.assertIsNone(v._cache_get(cache_key))
 
 
 class ViewletKeyTest(TestCase):
